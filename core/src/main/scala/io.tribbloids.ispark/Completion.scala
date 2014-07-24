@@ -1,4 +1,4 @@
-package org.refptr.iscala
+package io.tribbloids.ispark
 
 import org.apache.spark.repl.SparkIMain
 

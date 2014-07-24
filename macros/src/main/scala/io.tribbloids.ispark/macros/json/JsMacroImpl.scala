@@ -1,4 +1,4 @@
-package org.refptr.iscala.macros.json
+package io.tribbloids.ispark.macros.json
 
 import play.api.libs.json.{Reads,Writes,Format}
 

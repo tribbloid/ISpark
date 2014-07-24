@@ -1,4 +1,4 @@
-package org.refptr.iscala
+package io.tribbloids.ispark
 
 class UUID private (uuid: java.util.UUID, dashes: Boolean=true, upper: Boolean=false) {
     override def toString: String = {

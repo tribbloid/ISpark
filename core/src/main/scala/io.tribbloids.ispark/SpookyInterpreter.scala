@@ -1,4 +1,4 @@
-package org.refptr.iscala
+package io.tribbloids.ispark
 
 /**
  * Created by peng on 22/07/14.

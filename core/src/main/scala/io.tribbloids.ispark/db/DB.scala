@@ -1,4 +1,4 @@
-package org.refptr.iscala.db
+package io.tribbloids.ispark.db
 
 import java.sql.Timestamp
 

@@ -1,30 +1,30 @@
-package org.refptr.iscala
+package io.tribbloids.ispark
 
-import org.refptr.iscala.Util.{debug, getpid, log}
-import org.refptr.iscala.json.JsonUtil._
-import org.refptr.iscala.msg._
+import io.tribbloids.ispark.Util.{debug, getpid, log}
+import io.tribbloids.ispark.json.JsonUtil._
+import io.tribbloids.ispark.msg._
 import org.zeromq.ZMQ
 import sun.misc.{Signal, SignalHandler}
 
 import scalax.file.Path
 
-object IScala extends App {
+object ISpark extends App {
   val options = new Options(args)
 
   val thread = new Thread {
     override def run() {
-      val iscala = new IScala(options)
+      val iscala = new ISpark(options)
       iscala.heartBeat.join()
     }
   }
 
-  thread.setName("IScala")
+  thread.setName("ISpark")
   thread.setDaemon(true)
   thread.start()
   thread.join()
 }
 
-class IScala(options: Options) extends Parent {
+class ISpark(options: Options) extends Parent {
   val profile = options.profile match {
     case Some(path) => Path(path).string.as[Profile]
     case None =>
@@ -51,7 +51,7 @@ class IScala(options: Options) extends Parent {
 
   Runtime.getRuntime().addShutdownHook(new Thread() {
     override def run() {
-      debug("Terminating IScala")
+      debug("Terminating ISpark")
       interpreter.finalize()
     }
   })
@@ -78,9 +78,9 @@ class IScala(options: Options) extends Parent {
   (options.profile, options.parent) match {
     case (Some(file), true) =>
       // This setup means that this kernel was started by IPython. Currently
-      // IPython is unable to terminate IScala without explicitly killing it
-      // or sending shutdown_request. To fix that, IScala watches the profile
-      // file whether it exists or not. When the file is removed, IScala is
+      // IPython is unable to terminate ISpark without explicitly killing it
+      // or sending shutdown_request. To fix that, ISpark watches the profile
+      // file whether it exists or not. When the file is removed, ISpark is
       // terminated.
 
       class FileWatcher(file: java.io.File, interval: Int) extends Thread {

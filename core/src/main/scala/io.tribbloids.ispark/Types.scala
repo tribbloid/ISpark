@@ -1,4 +1,4 @@
-package org.refptr.iscala
+package io.tribbloids.ispark
 
 package object msg {
     type MIME = String

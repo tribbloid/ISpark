@@ -1,6 +1,6 @@
-package org.refptr.iscala
+package io.tribbloids.ispark
 
-import org.refptr.iscala.json.{Json,JsonImplicits}
+import io.tribbloids.ispark.json.{Json,JsonImplicits}
 
 case class Profile(
     ip: String,

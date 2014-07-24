@@ -1,9 +1,9 @@
-package org.refptr.iscala
+package io.tribbloids.ispark
 
 import org.zeromq.ZMQ
 
-import org.refptr.iscala.msg._
-import org.refptr.iscala.msg.formats._
+import io.tribbloids.ispark.msg._
+import io.tribbloids.ispark.msg.formats._
 
 import Util.{log,debug}
 
@@ -300,7 +300,7 @@ class HistoryHandler(parent: Parent) extends Handler[history_request](parent) {
   import parent.{ipy,interpreter}
 
   def apply(socket: ZMQ.Socket, msg: Msg[history_request]) {
-    import org.refptr.iscala.db.{DB,History,OutputHistory}
+    import io.tribbloids.ispark.db.{DB,History,OutputHistory}
 
     import scala.slick.driver.SQLiteDriver.simple._
     import Database.threadLocalSession

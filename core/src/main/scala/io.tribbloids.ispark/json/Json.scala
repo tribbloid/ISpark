@@ -1,4 +1,4 @@
-package org.refptr.iscala.json
+package io.tribbloids.ispark.json
 
 import scala.reflect.ClassTag
 
@@ -6,8 +6,8 @@ import play.api.libs.json.{Json=>PlayJson,Reads,Writes,OWrites,Format,JsPath}
 import play.api.libs.json.{JsResult,JsSuccess,JsError}
 import play.api.libs.json.{JsValue,JsString,JsArray,JsObject}
 
-import org.refptr.iscala.macros.json.JsonImpl
-import org.refptr.iscala.UUID
+import io.tribbloids.ispark.macros.json.JsonImpl
+import io.tribbloids.ispark.UUID
 
 object JsonUtil {
     def toJSON[T:Writes](obj: T): String =

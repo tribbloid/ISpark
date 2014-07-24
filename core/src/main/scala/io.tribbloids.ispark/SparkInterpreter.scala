@@ -1,10 +1,10 @@
-package org.refptr.iscala
+package io.tribbloids.ispark
 
 import java.util.concurrent.locks.ReentrantLock
 
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.repl.{SparkILoop, SparkCommandLine, SparkIMain}
-import org.refptr.iscala.Util.debug
+import io.tribbloids.ispark.Util.debug
 
 import scala.collection.mutable
 import scala.tools.nsc.interpreter.IR

@@ -201,7 +201,7 @@ account).
 Ignore any (deprecation) warnings you will get. To start IScala issue:
 ```
 > run
-[info] Running org.refptr.iscala.IScala
+[info] Running io.tribbloids.ispark.ISpark
 [info] connect ipython with --existing profile-18271.json
 [info] Welcome to Scala 2.10.2 (OpenJDK 64-Bit Server VM, Java 1.6.0_27)
 ```

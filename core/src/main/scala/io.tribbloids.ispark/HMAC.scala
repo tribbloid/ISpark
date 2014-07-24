@@ -1,4 +1,4 @@
-package org.refptr.iscala
+package io.tribbloids.ispark
 
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec

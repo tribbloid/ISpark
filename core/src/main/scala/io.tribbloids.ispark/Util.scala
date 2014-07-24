@@ -1,4 +1,4 @@
-package org.refptr.iscala
+package io.tribbloids.ispark
 
 import java.lang.management.ManagementFactory
 
@@ -26,7 +26,7 @@ trait ConsoleUtil {
     }
 
     def debug[T](message: => T) {
-        if (IScala.options.verbose) {
+        if (ISpark.options.verbose) {
             origOut.println(message)
         }
     }

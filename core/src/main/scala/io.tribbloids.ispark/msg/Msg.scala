@@ -1,6 +1,6 @@
-package org.refptr.iscala.msg
+package io.tribbloids.ispark.msg
 
-import org.refptr.iscala.UUID
+import io.tribbloids.ispark.UUID
 
 object ExecutionStatus extends Enumeration {
     type ExecutionStatus = Value
@@ -477,8 +477,8 @@ case class input_reply(
 // and explicit type annotations had to be added for formats of sealed
 // traits. Otherwise no known subclasses will be reported.
 
-import org.refptr.iscala.json.{Json,EnumJson,JsonImplicits}
-import org.refptr.iscala.msg._
+import io.tribbloids.ispark.json.{Json,EnumJson,JsonImplicits}
+import io.tribbloids.ispark.msg._
 import JsonImplicits._
 
 import play.api.libs.json.Writes

@@ -1,4 +1,4 @@
-package org.refptr.iscala;
+package io.tribbloids.ispark;
 
 // XXX: This is a hack to silence deperection warning on Thread.stop()
 // in src/main/scala/Interpreter.scala. javac will still complain, but
