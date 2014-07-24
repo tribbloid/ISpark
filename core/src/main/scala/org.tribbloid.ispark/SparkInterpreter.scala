@@ -35,8 +35,6 @@ class SparkInterpreter(args: Seq[String], usejavacp: Boolean=true) {
     cl
   }
 
-  val appName = "ISpark"
-
   val output = new java.io.StringWriter
   val printer = new java.io.PrintWriter(output)
 
@@ -212,6 +210,8 @@ class SparkInterpreter(args: Seq[String], usejavacp: Boolean=true) {
       })
     } else None
   }
+
+  lazy val appName: String = "ISpark"
 
   def createSparkContext(): SparkContext = {
     val execUri = System.getenv("SPARK_EXECUTOR_URI")
