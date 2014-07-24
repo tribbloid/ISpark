@@ -26,7 +26,7 @@ trait ConsoleUtil {
     }
 
     def debug[T](message: => T) {
-        if (ISpark.options.verbose) {
+        if (Main.options.verbose) {
             origOut.println(message)
         }
     }

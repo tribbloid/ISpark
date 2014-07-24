@@ -7,7 +7,7 @@ import org.apache.spark.repl.{SparkILoop, SparkCommandLine, SparkIMain}
 import org.tribbloid.ispark.Util.debug
 
 import scala.collection.mutable
-import scala.tools.nsc.interpreter.IR
+import scala.tools.nsc.interpreter.{NamedParam, IR}
 import scala.tools.nsc.io
 import scala.tools.nsc.util.ClassPath
 import scala.tools.nsc.util.Exceptional.unwrap
@@ -46,24 +46,40 @@ class SparkInterpreter(args: Seq[String], usejavacp: Boolean=true) {
   var inMap: mutable.Map[Int, String] = mutable.Map()
   var outMap: mutable.Map[Int, Any] = mutable.Map()
 
+  var sc: SparkContext = _
+
   this.initializeSpark()
 
   def ++ = n += 1
 
   def initializeSpark() {
-    interpret("")
-    interpret("import org.apache.spark.SparkContext._")
-//      """
-//      import org.apache.spark.{SparkConf, SparkContext}
-//      val conf = new SparkConf().setAppName("iSpark")
-//      @transient val sc = new SparkContext(conf)
-//
-//      import org.apache.spark.SparkContext._
-//      """)
+    sc = this.createSparkContext()
+    intp.bind(NamedParam[SparkContext]("sc", sc)) match {
+      case IR.Success => return
+      case _ => throw new RuntimeException("Spark failed to initialize")
+    }
+
+    interpret(
+      "import org.apache.spark.SparkContext._"
+    ) match {
+      case Results.Failure(ee) => throw new RuntimeException("SparkContext failed to be imported", ee)
+      case Results.Success(value) => return
+      case _ => throw new RuntimeException("SparkContext failed to be imported")
+    }
   }
 
-  def sparkCleanUp(){
-    val result = interpret("sc.stop()")
+  def sparkCleanUp() {
+    if (sc!=null) {
+      sc.stop()
+      sc = null
+    }
+
+    //    interpret("sc.stop()")
+    //    match {
+    //      case Results.Failure(exception) => throw exception
+    //      case Results.Success(value) => return
+    //      case _ => throw new RuntimeException("initialization failed to compile")
+    //    }
   }
 
   def resetSpark() {
@@ -202,7 +218,7 @@ class SparkInterpreter(args: Seq[String], usejavacp: Boolean=true) {
       .setMaster(getMaster())
       .setAppName("Spark shell")
       .setJars(jars)
-      .set("spark.repl.class.uri", intp.classServer.uri)
+      .set("spark.repl.class.uri", intp.classServer.uri) //very important! spark treat REPL very differently
     if (execUri != null) {
       conf.set("spark.executor.uri", execUri)
     }
@@ -214,9 +230,9 @@ class SparkInterpreter(args: Seq[String], usejavacp: Boolean=true) {
 
   private def getMaster(): String = {
     val master = {
-        val envMaster = sys.env.get("MASTER")
-        val propMaster = sys.props.get("spark.master")
-        propMaster.orElse(envMaster).getOrElse("local[*]")
+      val envMaster = sys.env.get("MASTER")
+      val propMaster = sys.props.get("spark.master")
+      propMaster.orElse(envMaster).getOrElse("local[*]")
     }
     master
   }

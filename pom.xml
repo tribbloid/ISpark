@@ -21,7 +21,7 @@
     <artifactId>ispark</artifactId>
     <packaging>pom</packaging>
     <version>${project.version}</version>
-    <url>https://github.com/tribbloid/spookystuff</url>
+    <url>https://github.com/tribbloid/ispark</url>
 
     <repositories>
         <repository>

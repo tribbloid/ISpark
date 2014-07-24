@@ -7,15 +7,15 @@ class SpookyInterpreter(args: Seq[String], usejavacp: Boolean=true)
   extends SparkInterpreter(args, usejavacp) {
 
   override def initializeSpark() {
-    val result = interpret(
-      """
-      import org.apache.spark.{SparkConf, SparkContext}
-      val conf = new SparkConf().setAppName("iSpark")
-      @transient val sc = new SparkContext(conf)
+    super.initializeSpark()
 
-      import org.apache.spark.SparkContext._
+    interpret("""
       import org.tribbloid.spookystuff.SpookyContext._
       import org.tribbloid.spookystuff.entity._
-      """)
+              """) match {
+      case Results.Failure(ee) => throw new RuntimeException("SparkContext failed to be imported", ee)
+      case Results.Success(value) => return
+      case _ => throw new RuntimeException("SparkContext failed to be imported")
+    }
   }
 }

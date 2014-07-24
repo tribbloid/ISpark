@@ -8,20 +8,20 @@ import sun.misc.{Signal, SignalHandler}
 
 import scalax.file.Path
 
-object ISpark {
+object Main {
 
   var options: Options = _
-  var ispark: ISpark = _
+  var daemon: Main = _
 
   def main (args: Array[String]) {
     options = new Options(args)
-    ispark = new ISpark(options)
-    ispark.heartBeat.join()
+    daemon = new Main(options)
+    daemon.heartBeat.join()
   }
 
 }
 
-class ISpark(options: Options) extends Parent {
+class Main(options: Options) extends Parent {
   val profile = options.profile match {
     case Some(path) => Path(path).string.as[Profile]
     case None =>
@@ -48,7 +48,7 @@ class ISpark(options: Options) extends Parent {
 
   Runtime.getRuntime().addShutdownHook(new Thread() {
     override def run() {
-      debug("Terminating ISpark")
+      debug("Terminating Main")
       interpreter.finalize()
     }
   })
@@ -75,9 +75,9 @@ class ISpark(options: Options) extends Parent {
   (options.profile, options.parent) match {
     case (Some(file), true) =>
       // This setup means that this kernel was started by IPython. Currently
-      // IPython is unable to terminate ISpark without explicitly killing it
-      // or sending shutdown_request. To fix that, ISpark watches the profile
-      // file whether it exists or not. When the file is removed, ISpark is
+      // IPython is unable to terminate Main without explicitly killing it
+      // or sending shutdown_request. To fix that, Main watches the profile
+      // file whether it exists or not. When the file is removed, Main is
       // terminated.
 
       class FileWatcher(file: java.io.File, interval: Int) extends Thread {
