@@ -8,20 +8,26 @@ import sun.misc.{Signal, SignalHandler}
 
 import scalax.file.Path
 
-object ISpark extends App {
-  val options = new Options(args)
+object ISpark {
 
-  val thread = new Thread {
-    override def run() {
-      val iscala = new ISpark(options)
-      iscala.heartBeat.join()
+  var options: Options = _
+
+  def main (args: Array[String]) {
+    options = new Options(args)
+
+    val thread = new Thread {
+      override def run() {
+        val iscala = new ISpark(options)
+        iscala.heartBeat.join()
+      }
     }
+
+    thread.setName("ISpark")
+    thread.setDaemon(true)
+    thread.start()
+    thread.join()
   }
 
-  thread.setName("ISpark")
-  thread.setDaemon(true)
-  thread.start()
-  thread.join()
 }
 
 class ISpark(options: Options) extends Parent {
