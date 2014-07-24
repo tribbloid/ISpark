@@ -15,17 +15,8 @@ object ISpark {
   def main (args: Array[String]) {
     options = new Options(args)
 
-    val thread = new Thread {
-      override def run() {
-        val iscala = new ISpark(options)
-        iscala.heartBeat.join()
-      }
-    }
-
-    thread.setName("ISpark")
-    thread.setDaemon(true)
-    thread.start()
-    thread.join()
+    val ispark = new ISpark(options)
+    ispark.heartBeat.join()
   }
 
 }
