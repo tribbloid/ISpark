@@ -1,14 +1,14 @@
-package io.tribbloids.ispark
+package org.tribbloid.ispark
 
 import org.zeromq.ZMQ
 
 import play.api.libs.json.{Reads,Writes}
 
-import io.tribbloids.ispark.msg._
-import io.tribbloids.ispark.msg.formats._
+import org.tribbloid.ispark.msg._
+import org.tribbloid.ispark.msg.formats._
 
-import io.tribbloids.ispark.Util.{log,debug}
-import io.tribbloids.ispark.json.JsonUtil._
+import org.tribbloid.ispark.Util.{log,debug}
+import org.tribbloid.ispark.json.JsonUtil._
 
 class Communication(zmq: Sockets, profile: Profile) {
     private val hmac = HMAC(profile.key, profile.signature_scheme)

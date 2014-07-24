@@ -1,6 +1,6 @@
-package io.tribbloids.ispark
+package org.tribbloid.ispark
 
-import io.tribbloids.ispark.json.{Json,JsonImplicits}
+import org.tribbloid.ispark.json.{Json,JsonImplicits}
 
 case class Profile(
     ip: String,

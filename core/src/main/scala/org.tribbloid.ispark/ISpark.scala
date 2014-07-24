@@ -1,8 +1,8 @@
-package io.tribbloids.ispark
+package org.tribbloid.ispark
 
-import io.tribbloids.ispark.Util.{debug, getpid, log}
-import io.tribbloids.ispark.json.JsonUtil._
-import io.tribbloids.ispark.msg._
+import org.tribbloid.ispark.Util.{debug, getpid, log}
+import org.tribbloid.ispark.json.JsonUtil._
+import org.tribbloid.ispark.msg._
 import org.zeromq.ZMQ
 import sun.misc.{Signal, SignalHandler}
 
@@ -11,11 +11,11 @@ import scalax.file.Path
 object ISpark {
 
   var options: Options = _
+  var ispark: ISpark = _
 
   def main (args: Array[String]) {
     options = new Options(args)
-
-    val ispark = new ISpark(options)
+    ispark = new ISpark(options)
     ispark.heartBeat.join()
   }
 

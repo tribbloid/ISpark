@@ -1,4 +1,4 @@
-package io.tribbloids.ispark
+package org.tribbloid.ispark
 
 import scala.util.parsing.combinator.JavaTokenParsers
 

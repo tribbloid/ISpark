@@ -1,4 +1,4 @@
-package io.tribbloids.ispark
+package org.tribbloid.ispark
 
 import org.zeromq.ZMQ
 

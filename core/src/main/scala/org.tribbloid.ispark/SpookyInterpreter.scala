@@ -1,4 +1,4 @@
-package io.tribbloids.ispark
+package org.tribbloid.ispark
 
 /**
  * Created by peng on 22/07/14.

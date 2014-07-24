@@ -17,7 +17,7 @@
         <MaxPermGen>2g</MaxPermGen>
     </properties>
 
-    <groupId>io.tribbloids.ispark</groupId>
+    <groupId>org.tribbloid.ispark</groupId>
     <artifactId>ispark</artifactId>
     <packaging>pom</packaging>
     <version>${project.version}</version>

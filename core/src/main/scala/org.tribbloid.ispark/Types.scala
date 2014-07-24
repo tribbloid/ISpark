@@ -1,4 +1,4 @@
-package io.tribbloids.ispark
+package org.tribbloid.ispark
 
 package object msg {
     type MIME = String

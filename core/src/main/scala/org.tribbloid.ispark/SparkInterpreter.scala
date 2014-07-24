@@ -1,10 +1,10 @@
-package io.tribbloids.ispark
+package org.tribbloid.ispark
 
 import java.util.concurrent.locks.ReentrantLock
 
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.repl.{SparkILoop, SparkCommandLine, SparkIMain}
-import io.tribbloids.ispark.Util.debug
+import org.tribbloid.ispark.Util.debug
 
 import scala.collection.mutable
 import scala.tools.nsc.interpreter.IR
@@ -51,21 +51,19 @@ class SparkInterpreter(args: Seq[String], usejavacp: Boolean=true) {
   def ++ = n += 1
 
   def initializeSpark() {
-    val result = interpret(
-      """
-      import org.apache.spark.{SparkConf, SparkContext}
-      val conf = new SparkConf().setAppName("iSpark")
-      @transient val sc = new SparkContext(conf)
-
-      import org.apache.spark.SparkContext._
-      """)
+    interpret("")
+    interpret("import org.apache.spark.SparkContext._")
+//      """
+//      import org.apache.spark.{SparkConf, SparkContext}
+//      val conf = new SparkConf().setAppName("iSpark")
+//      @transient val sc = new SparkContext(conf)
+//
+//      import org.apache.spark.SparkContext._
+//      """)
   }
 
   def sparkCleanUp(){
-    val result = interpret(
-      """
-      sc.stop()
-      """)
+    val result = interpret("sc.stop()")
   }
 
   def resetSpark() {
