@@ -35,6 +35,8 @@ class SparkInterpreter(args: Seq[String], usejavacp: Boolean=true) {
     cl
   }
 
+  val appName = "ISpark"
+
   val output = new java.io.StringWriter
   val printer = new java.io.PrintWriter(output)
 
@@ -216,7 +218,7 @@ class SparkInterpreter(args: Seq[String], usejavacp: Boolean=true) {
     val jars = SparkILoop.getAddedJars
     val conf = new SparkConf()
       .setMaster(getMaster())
-      .setAppName("Spark shell")
+      .setAppName(this.appName)
       .setJars(jars)
       .set("spark.repl.class.uri", intp.classServer.uri) //very important! spark treat REPL very differently
     if (execUri != null) {

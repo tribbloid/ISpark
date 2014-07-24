@@ -6,6 +6,8 @@ package org.tribbloid.ispark
 class SpookyInterpreter(args: Seq[String], usejavacp: Boolean=true)
   extends SparkInterpreter(args, usejavacp) {
 
+  override val appName = "ISpooky"
+
   override def initializeSpark() {
     super.initializeSpark()
 
