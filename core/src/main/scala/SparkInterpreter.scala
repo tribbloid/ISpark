@@ -2,6 +2,7 @@ package org.refptr.iscala
 
 import java.util.concurrent.locks.ReentrantLock
 
+import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.repl.{SparkILoop, SparkCommandLine, SparkIMain}
 import org.refptr.iscala.Util.debug
 
@@ -194,6 +195,32 @@ class SparkInterpreter(args: Seq[String], usejavacp: Boolean=true) {
         stringify(if (deconstruct) intp0.deconstruct.show(info) else info)
       })
     } else None
+  }
+
+  def createSparkContext(): SparkContext = {
+    val execUri = System.getenv("SPARK_EXECUTOR_URI")
+    val jars = SparkILoop.getAddedJars
+    val conf = new SparkConf()
+      .setMaster(getMaster())
+      .setAppName("Spark shell")
+      .setJars(jars)
+      .set("spark.repl.class.uri", intp.classServer.uri)
+    if (execUri != null) {
+      conf.set("spark.executor.uri", execUri)
+    }
+    if (System.getenv("SPARK_HOME") != null) {
+      conf.setSparkHome(System.getenv("SPARK_HOME"))
+    }
+    new SparkContext(conf)
+  }
+
+  private def getMaster(): String = {
+    val master = {
+        val envMaster = sys.env.get("MASTER")
+        val propMaster = sys.props.get("spark.master")
+        propMaster.orElse(envMaster).getOrElse("local[*]")
+    }
+    master
   }
 }
 
