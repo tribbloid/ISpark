@@ -60,7 +60,6 @@ class SparkInterpreter(args: Seq[String], usejavacp: Boolean=true) {
     }
 
     interpret("""
-@transient val sc: org.apache.spark.SparkContext = sc
 import org.apache.spark.SparkContext._
     """) match {
       case Results.Failure(ee) => throw new RuntimeException("SparkContext failed to be imported", ee)
