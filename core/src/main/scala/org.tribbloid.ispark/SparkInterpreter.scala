@@ -54,14 +54,15 @@ class SparkInterpreter(args: Seq[String], usejavacp: Boolean=true) {
 
   def initializeSpark() {
     sc = this.createSparkContext()
-    intp.bind(NamedParam[SparkContext]("sc", sc)) match {
+    intp.quietBind(NamedParam[SparkContext]("sc", sc)) match {
       case IR.Success => return
       case _ => throw new RuntimeException("Spark failed to initialize")
     }
 
-    interpret(
-      "import org.apache.spark.SparkContext._"
-    ) match {
+    interpret("""
+@transient val sc: org.apache.spark.SparkContext = sc
+import org.apache.spark.SparkContext._
+    """) match {
       case Results.Failure(ee) => throw new RuntimeException("SparkContext failed to be imported", ee)
       case Results.Success(value) => return
       case _ => throw new RuntimeException("SparkContext failed to be imported")

@@ -12,12 +12,12 @@ class SpookyInterpreter(args: Seq[String], usejavacp: Boolean=true)
     super.initializeSpark()
 
     interpret("""
-      import org.tribbloid.spookystuff.SpookyContext._
-      import org.tribbloid.spookystuff.entity._
+import org.tribbloid.spookystuff.SpookyContext._
+import org.tribbloid.spookystuff.entity._
               """) match {
-      case Results.Failure(ee) => throw new RuntimeException("SparkContext failed to be imported", ee)
+      case Results.Failure(ee) => throw new RuntimeException("SpookyContext failed to be imported", ee)
       case Results.Success(value) => return
-      case _ => throw new RuntimeException("SparkContext failed to be imported")
+      case _ => throw new RuntimeException("SpookyContext failed to be imported")
     }
   }
 }
