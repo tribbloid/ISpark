@@ -6,7 +6,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.repl.{SparkILoop, SparkCommandLine, SparkIMain}
 import org.tribbloid.ispark.Util.debug
 
-import scala.collection.mutable
+import scala.collection.{immutable, mutable}
 import scala.tools.nsc.interpreter.{NamedParam, IR}
 import scala.tools.nsc.io
 import scala.tools.nsc.util.ClassPath
@@ -38,7 +38,13 @@ class SparkInterpreter(args: Seq[String], usejavacp: Boolean=true) {
   val output = new java.io.StringWriter
   val printer = new java.io.PrintWriter(output)
 
-  var intp: SparkIMain = new SparkIMain(commandLine.settings, printer)
+  //TODO: commit back to Spark
+  var intp = new SparkIMain(commandLine.settings, printer) {
+    def quietBind(p: NamedParam, modifiers: List[String]): IR.Result       = beQuietDuring(bind(p, modifiers))
+
+    def bind(p: NamedParam, modifiers: List[String]): IR.Result             = bind(p.name, p.tpe, p.value, modifiers)
+  }
+
   var runner: Runner = new Runner(intp.classLoader)
   var session: Session = new Session
   var n: Int = 0
@@ -54,7 +60,7 @@ class SparkInterpreter(args: Seq[String], usejavacp: Boolean=true) {
 
   def initializeSpark() {
     sc = this.createSparkContext()
-    intp.quietBind(NamedParam[SparkContext]("sc", sc)) match {
+    intp.quietBind(NamedParam[SparkContext]("sc", sc), immutable.List("@transient")) match {
       case IR.Success => return
       case _ => throw new RuntimeException("Spark failed to initialize")
     }
