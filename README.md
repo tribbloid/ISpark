@@ -15,6 +15,11 @@ ISpark
 ISpark is a standard Spark Application that when submitted, its driver will maintain a three-way connection
 between IPython UI server and Spark cluster.
 
+## Demo
+
+[Click me](http://ec2-54-88-40-125.compute-1.amazonaws.com:8080/) for a quick impression
+This environment is deployed on a Spark cluster with 8+ cores. It comes with no uptime guarantee and may not be accessible during maintenance.
+
 ## Usage
 
 ISpark supports 2 REPL environments: [Native (Spark-shell)]() & [SpookyStuff], support for Mahout DRM
