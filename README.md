@@ -17,7 +17,8 @@ between IPython UI server and Spark cluster.
 
 ## Demo
 
-[Click me](http://ec2-54-88-40-125.compute-1.amazonaws.com:8080/) for a quick impression
+[Click me](http://ec2-54-88-40-125.compute-1.amazonaws.com:8080/) for a quick impression.
+
 This environment is deployed on a Spark cluster with 8+ cores. It comes with no uptime guarantee and may not be accessible during maintenance.
 
 ## Usage
@@ -38,7 +39,7 @@ after which you can define a `Spark` profile for IPython by running:
 ```
 $ ipython profile create spark
 ```
-Then adding the following line into u'~/.ipython/profile_spark/ipython_config.py':
+Then adding the following line into `~/.ipython/profile_spark/ipython_config.py`:
 
 ```
 SPARK_HOME = os.environ['SPARK_HOME']
@@ -54,23 +55,19 @@ c.KernelManager.kernel_cmd = [SPARK_HOME+"/bin/spark-submit",
  "--interp", "Spark",
  "--parent"]
 
-c.NotebookApp.ip = '*' # only add this line if you want IPython-notebook to be accessible to public
+c.NotebookApp.ip = '*' # only add this line if you want IPython-notebook being open to the public
 c.NotebookApp.open_browser = False # only add this line if you want to suppress opening a browser after IPython-notebook initialization
 ```
 
 Congratulation! Now you can initialize ISpark CLI or ISpark-notebook by running:
-```
-ipython console --profile spark
-```
-OR
-```
-ipython notebook --profile spark
-```
+
+`ipython console --profile spark` OR `ipython notebook --profile spark`
+
 respectively. Similarly, you can define another `SpookyStuff` profile for IPython by running:
 ```
 $ ipython profile create spooky
 ```
-and adding the following line into u'~/.ipython/profile_spooky/ipython_config.py':
+and adding the following line into `~/.ipython/profile_spooky/ipython_config.py`:
 
 ```
 SPARK_HOME = os.environ['SPARK_HOME']
@@ -87,7 +84,7 @@ c.KernelManager.kernel_cmd = [SPARK_HOME+"/bin/spark-submit",
  "--interp", "Spooky",
  "--parent"]
 
-c.NotebookApp.ip = '*' # only add this line if you want IPython-notebook to be accessible to public
+c.NotebookApp.ip = '*' # only add this line if you want IPython-notebook being open to the public
 c.NotebookApp.open_browser = False # only add this line if you want to suppress opening a browser after IPython-notebook initialization
 ```
 
@@ -155,7 +152,7 @@ SparkContext
 Support for sbt-based library/dependency management has been removed due to its incompatibility with spark deployment requirement.
 if sbt is allowed to download new dependencies, using them in any distributed closure may compile
 but will throw ClassDefNotFoundErrors in runtime because they won't be submitted to Spark master.
-Users are encouraged to attach their jars in spark-submit parameter.
+Users are encouraged to attach their jars using the "--jars" parameter of spark-submit.
 
 ## License
 
