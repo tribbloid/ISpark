@@ -23,7 +23,7 @@ This environment is deployed on a Spark cluster with 8+ cores. It comes with no 
 
 ## Usage
 
-ISpark supports 2 REPL environments: [Native (Spark-shell)]() & [SpookyStuff], support for Mahout DRM
+ISpark supports 2 REPL environments: [Native (Spark-shell)](http://spark.apache.org/docs/latest/quick-start.html) & [SpookyStuff](https://github.com/tribbloid/spookystuff), support for Mahout DRM
 will be added soon.
 
 ISpark needs to be compiled and packaged into an uber jar by [Maven](http://maven.apache.org/) before being submitted and deployed:
