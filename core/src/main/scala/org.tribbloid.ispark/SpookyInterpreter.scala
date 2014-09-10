@@ -12,7 +12,7 @@ class SpookyInterpreter(args: Seq[String], usejavacp: Boolean=true)
     super.initializeSpark()
 
     interpret("""
-import org.tribbloid.spookystuff.entity._
+import org.tribbloid.spookystuff.entity.clientaction._
 import org.tribbloid.spookystuff.factory.driver._
 import org.tribbloid.spookystuff.SpookyContext
               """) match {
