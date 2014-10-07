@@ -224,7 +224,7 @@ class CompleteHandler(parent: Parent) extends Handler[complete_request](parent) 
   import parent.{ipy,interpreter}
 
   def apply(socket: ZMQ.Socket, msg: Msg[complete_request]) {
-    val text = msg.content.text
+    val text = msg.content.line
 
     val matches = if (msg.content.line.startsWith("%")) {
       val prefix = text.stripPrefix("%")
