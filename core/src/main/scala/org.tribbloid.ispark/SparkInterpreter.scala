@@ -199,7 +199,9 @@ import org.apache.spark.SparkContext._
 
   def cancel() = runner.cancel()
 
-  def stringify(obj: Any): String = intp.naming.unmangle(obj.toString)
+  def stringify(obj: Any): String = {
+    intp.naming.unmangle("" + obj)
+  }
 
   def typeInfo(code: String, deconstruct: Boolean): Option[String] = {
     val intp0 = intp
