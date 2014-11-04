@@ -47,7 +47,7 @@ class Main(options: Options) extends Parent {
     log(s"Welcome to Scala $versionNumberString ($javaVmName, Java $javaVersion)")
   }
 
-  Runtime.getRuntime().addShutdownHook(new Thread() {
+  Runtime.getRuntime.addShutdownHook(new Thread() {
     override def run() {
       debug("Terminating Main")
       interpreter.finalize()

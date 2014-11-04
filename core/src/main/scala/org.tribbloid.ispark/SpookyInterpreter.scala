@@ -13,13 +13,13 @@ class SpookyInterpreter(args: Seq[String], usejavacp: Boolean=true)
 
     interpret("""
 import scala.concurrent.duration._
-import org.tribbloid.spookystuff.entity.client._
+import org.tribbloid.spookystuff.actions._
 import org.tribbloid.spookystuff.factory.driver._
-import org.tribbloid.spookystuff.operator._
+import org.tribbloid.spookystuff.expressions._
 import org.tribbloid.spookystuff.SpookyContext
               """) match {
       case Results.Failure(ee) => throw new RuntimeException("SpookyContext failed to be imported", ee)
-      case Results.Success(value) => return
+      case Results.Success(value) =>
       case _ => throw new RuntimeException("SpookyContext failed to be imported")
     }
   }
