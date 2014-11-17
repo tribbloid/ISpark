@@ -17,7 +17,7 @@ between IPython UI server and Spark cluster.
 
 ## Demo
 
-[Click me](http://ec2-54-88-74-212.compute-1.amazonaws.com:8888/tree) for a quick impression.
+[Click me](http://ec2-54-165-231-62.compute-1.amazonaws.com:8888/tree) for a quick impression.
 
 This environment is deployed on a Spark cluster with 8+ cores. It comes with no uptime guarantee and may not be accessible during maintenance.
 
