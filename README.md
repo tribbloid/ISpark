@@ -42,6 +42,7 @@ $ ipython profile create spark
 Then adding the following line into `~/.ipython/profile_spark/ipython_config.py`:
 
 ```
+import os
 SPARK_HOME = os.environ['SPARK_HOME']
 # the above line can be replaced with: SPARK_HOME = '${INSERT_INSTALLATION_DIR_OF_SPARK}'
 MASTER = '${INSERT_YOUR_SPARK_MASTER_URL}'
