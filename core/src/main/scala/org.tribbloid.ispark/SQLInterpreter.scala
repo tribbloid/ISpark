@@ -17,7 +17,7 @@ class SQLInterpreter(args: Seq[String], usejavacp: Boolean=true)
     val sqlContext = new SQLContext(this.sc)
     intp.quietBind(NamedParam[SQLContext]("sqlContext", sqlContext), immutable.List("@transient")) match {
       case IR.Success =>
-      case _ => throw new RuntimeException("SQL failed to initialize")
+      case _ => throw new RuntimeException("SQLContext failed to initialize")
     }
 
     //TODO: this part doesn't work
