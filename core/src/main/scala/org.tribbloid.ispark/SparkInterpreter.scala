@@ -68,8 +68,8 @@ class SparkInterpreter(args: Seq[String], usejavacp: Boolean=true) {
     interpret("""
 import org.apache.spark.SparkContext._
     """) match {
+      case Results.Success(value) =>
       case Results.Failure(ee) => throw new RuntimeException("SparkContext failed to be imported", ee)
-      case Results.Success(value) => return
       case _ => throw new RuntimeException("SparkContext failed to be imported")
     }
   }

@@ -17,14 +17,14 @@ between IPython UI server and Spark cluster.
 
 ## Demo
 
-[Click me](http://ec2-54-165-231-62.compute-1.amazonaws.com:8888/tree) for a quick impression.
+[Click me](http://ec2-54-165-231-62.compute-1.amazonaws.com:8888/notebooks/all_inclusive_do_not_create_new_notebook.ipynb) for a quick impression.
 
-This environment is deployed on a Spark cluster with 8+ cores. It comes with no uptime guarantee and may not be accessible during maintenance.
+This environment is deployed on a Spark cluster with 4+ cores. It comes with no uptime guarantee and may not be accessible during maintenance.
 
 ## Usage
 
-ISpark supports 2 REPL environments: [Native (Spark-shell)](http://spark.apache.org/docs/latest/quick-start.html) & [SpookyStuff](https://github.com/tribbloid/spookystuff), support for Mahout DRM
-will be added soon.
+ISpark only supports [Native (Spark-shell) environment](http://spark.apache.org/docs/latest/quick-start.html), support for Mahout DRM
+will be added upon request.
 
 ISpark needs to be compiled and packaged into an uber jar by [Maven](http://maven.apache.org/) before being submitted and deployed:
 
@@ -50,43 +50,22 @@ c.KernelManager.kernel_cmd = [SPARK_HOME+"/bin/spark-submit",
  "--master", MASTER,
  "--class", "org.tribbloid.ispark.Main",\
  "--executor-memory", "2G", #ISpark driver takes more memory than most other Spark drivers
- "${INSERT_FULL_PATH_OF_ISPARK_UBER_JAR}",
+ "--jars", "${INSERT_FULL_PATH_OF_ISPARK_UBER_JAR}",
+ "${INSERT_FULL_PATH_OF_OTHER_JARS}",
  "--profile", "{connection_file}",
  "--interp", "Spark",
  "--parent"]
 
 c.NotebookApp.ip = '*' # only add this line if you want IPython-notebook being open to the public
 c.NotebookApp.open_browser = False # only add this line if you want to suppress opening a browser after IPython-notebook initialization
+c.NotebookApp.port = 8888
 ```
 
 Congratulation! Now you can initialize ISpark CLI or ISpark-notebook by running:
 
 `ipython console --profile spark` OR `ipython notebook --profile spark`
 
-respectively. Similarly, you can define another `SpookyStuff` profile for IPython by running:
-```
-$ ipython profile create spooky
-```
-and adding the following line into `~/.ipython/profile_spooky/ipython_config.py`:
-
-```
-SPARK_HOME = os.environ['SPARK_HOME']
-# the above line can be replaced with: SPARK_HOME = '${INSERT_INSTALLATION_DIR_OF_SPARK}'
-MASTER = '${INSERT_YOUR_SPARK_MASTER_URL}'
-
-c.KernelManager.kernel_cmd = [SPARK_HOME+"/bin/spark-submit",
- "--master", MASTER,
- "--class", "org.tribbloid.ispark.Main",\
- "--executor-memory", "2G", #ISpark driver takes more memory than most other Spark drivers
- "--jars", ${INSERT_FULL_PATH_OF_SPOOKYSTUFF_SHELL_UBER_JAR},
- "${INSERT_FULL_PATH_OF_ISPARK_UBER_JAR}",
- "--profile", "{connection_file}",
- "--interp", "Spooky",
- "--parent"]
-
-c.NotebookApp.ip = '*' # only add this line if you want IPython-notebook being open to the public
-c.NotebookApp.open_browser = False # only add this line if you want to suppress opening a browser after IPython-notebook initialization
-```
+(Support for the data collection/enrichment engine SpookyStuff has been moved to an independent project: https://github.com/tribbloid/ISpooky.git)
 
 ## Example
 

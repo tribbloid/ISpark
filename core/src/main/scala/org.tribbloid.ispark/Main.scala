@@ -38,7 +38,6 @@ class Main(options: Options) extends Parent {
   lazy val interpreter = options.interp match {
     case Some("Spark") => new SparkInterpreter(options.tail)
     case Some("SQL") => new SQLInterpreter(options.tail)
-    case Some("Spooky") => new SpookyInterpreter(options.tail)
     case _ => new SparkInterpreter(options.tail)
   }
 

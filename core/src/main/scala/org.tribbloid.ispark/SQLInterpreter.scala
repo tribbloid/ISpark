@@ -1,6 +1,5 @@
 package org.tribbloid.ispark
 
-import org.apache.spark.SparkContext
 import org.apache.spark.sql.SQLContext
 
 import scala.collection.immutable
@@ -12,25 +11,22 @@ import scala.tools.nsc.interpreter._
 class SQLInterpreter(args: Seq[String], usejavacp: Boolean=true)
   extends SparkInterpreter(args, usejavacp) {
 
-  override lazy val appName: String = "ISpooky"
-
-  var sql: SQLContext = _
-
   override def initializeSpark() {
     super.initializeSpark()
 
-    sql = new SQLContext(this.sc)
-    intp.quietBind(NamedParam[SQLContext]("sql", sql), immutable.List("@transient")) match {
-      case IR.Success => return
+    val sqlContext = new SQLContext(this.sc)
+    intp.quietBind(NamedParam[SQLContext]("sqlContext", sqlContext), immutable.List("@transient")) match {
+      case IR.Success =>
       case _ => throw new RuntimeException("SQL failed to initialize")
     }
-  }
 
-  override def sparkCleanUp(): Unit = {
-    super.sparkCleanUp()
-
-    if (sql!=null) {
-      sql = null
-    }
+    //TODO: this part doesn't work
+//    interpret("""
+//import sqlContext._
+//              """) match {
+//      case Results.Success(value) =>
+//      case Results.Failure(ee) => throw new RuntimeException("SQLContext failed to be imported", ee)
+//      case _ => throw new RuntimeException("SQLContext failed to be imported")
+//    }
   }
 }
