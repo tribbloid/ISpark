@@ -12,7 +12,7 @@ trait ByteUtil {
 
 trait OSUtil {
     def getpid(): Int = {
-        val name = ManagementFactory.getRuntimeMXBean().getName()
+        val name = ManagementFactory.getRuntimeMXBean.getName
         name.takeWhile(_ != '@').toInt
     }
 }
@@ -26,7 +26,7 @@ trait ConsoleUtil {
     }
 
     def debug[T](message: => T) {
-        if (Main.options.verbose) {
+        if (Util.options.verbose) {
             origOut.println(message)
         }
     }
@@ -34,7 +34,7 @@ trait ConsoleUtil {
 
 trait StringUtil {
     /** Find longest common prefix of a list of strings.
-     */
+      */
     def commonPrefix(xs: List[String]): String = {
         if (xs.isEmpty || xs.contains("")) ""
         else xs.head.head match {
@@ -45,16 +45,16 @@ trait StringUtil {
     }
 
     /** Find longest string that is a suffix of `head` and prefix of `tail`.
-     *
-     *  Example:
-     *
-     *    isInstance
-     *  x.is
-     *    ^^
-     *
-     *  >>> Util.suffixPrefix("x.is", "isInstance")
-     *  "is"
-     */
+      *
+      *  Example:
+      *
+      *    isInstance
+      *  x.is
+      *    ^^
+      *
+      *  >>> Util.suffixPrefix("x.is", "isInstance")
+      *  "is"
+      */
     def suffixPrefix(head: String, tail: String): String = {
         var prefix = head
         while (!tail.startsWith(prefix)) {
@@ -64,5 +64,8 @@ trait StringUtil {
     }
 }
 
-trait Util extends ScalaUtil with ByteUtil with OSUtil with ConsoleUtil with StringUtil
-object Util extends Util
+object Util extends ScalaUtil with ByteUtil with OSUtil with ConsoleUtil with StringUtil {
+
+    var options: Options = _
+    var daemon: Main = _
+}

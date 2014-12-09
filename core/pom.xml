@@ -93,7 +93,7 @@
                             <relocations>
                                 <relocation>
                                     <pattern>org.apache.http</pattern>
-                                    <shadedPattern>isparkshaded.org.apache.http</shadedPattern>
+                                    <shadedPattern>org.shaded.apache.http</shadedPattern>
                                 </relocation>
                             </relocations>
 

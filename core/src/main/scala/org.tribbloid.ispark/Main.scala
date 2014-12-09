@@ -10,15 +10,11 @@ import scalax.file.Path
 
 object Main {
 
-  var options: Options = _
-  var daemon: Main = _
-
   def main (args: Array[String]) {
-    options = new Options(args)
-    daemon = new Main(options)
-    daemon.heartBeat.join()
+    Util.options = new Options(args)
+    Util.daemon = new Main(Util.options)
+    Util.daemon.heartBeat.join()
   }
-
 }
 
 class Main(options: Options) extends Parent {
