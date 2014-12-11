@@ -29,7 +29,7 @@ will be added upon request.
 ISpark needs to be compiled and packaged into an uber jar by [Maven](http://maven.apache.org/) before being submitted and deployed:
 
 ```bash
-./mvn-install
+./mvn-install.sh
 ...
 Building jar: ${PROJECT_DIR}/core/target/ispark-core-${PROJECT_VERSION}.jar
 ...
