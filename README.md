@@ -28,8 +28,8 @@ will be added upon request.
 
 ISpark needs to be compiled and packaged into an uber jar by [Maven](http://maven.apache.org/) before being submitted and deployed:
 
-```
-mvn package
+```bash
+./mvn-install
 ...
 Building jar: ${PROJECT_DIR}/core/target/ispark-core-${PROJECT_VERSION}.jar
 ...
@@ -41,14 +41,17 @@ $ ipython profile create spark
 ```
 Then adding the following line into `~/.ipython/profile_spark/ipython_config.py`:
 
-```
+```python
+import os
+c = get_config()
+
 SPARK_HOME = os.environ['SPARK_HOME']
 # the above line can be replaced with: SPARK_HOME = '${INSERT_INSTALLATION_DIR_OF_SPARK}'
 MASTER = '${INSERT_YOUR_SPARK_MASTER_URL}'
 
 c.KernelManager.kernel_cmd = [SPARK_HOME+"/bin/spark-submit",
  "--master", MASTER,
- "--class", "org.tribbloid.ispark.Main",\
+ "--class", "org.tribbloid.ispark.Main", 
  "--executor-memory", "2G", #ISpark driver takes more memory than most other Spark drivers
  "--jars", "${INSERT_FULL_PATH_OF_ISPARK_UBER_JAR}",
  "${INSERT_FULL_PATH_OF_OTHER_JARS}",
