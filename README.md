@@ -36,7 +36,7 @@ Building jar: ${PROJECT_DIR}/core/target/ispark-core-${PROJECT_VERSION}.jar
 ```
 
 after which you can define a `Spark` profile for IPython by running:
-```
+```bash
 $ ipython profile create spark
 ```
 Then adding the following line into `~/.ipython/profile_spark/ipython_config.py`:
@@ -72,7 +72,7 @@ Congratulation! Now you can initialize ISpark CLI or ISpark-notebook by running:
 
 ## Example
 
-```
+```scala
 In [1]: sc
 Out[1]: org.apache.spark.SparkContext@2cd972df
 
@@ -104,7 +104,7 @@ To infer the type of an expression use `%type expr`. This doesn't require
 evaluation of `expr`, only compilation up to _typer_ phase. You can also
 get compiler's internal type trees with `%type -v` or `%type --verbose`.
 
-```
+```scala
 In [1]: %type 1
 Int
 
