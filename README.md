@@ -28,27 +28,30 @@ will be added upon request.
 
 ISpark needs to be compiled and packaged into an uber jar by [Maven](http://maven.apache.org/) before being submitted and deployed:
 
-```
-mvn package
+```bash
+./mvn-install.sh
 ...
 Building jar: ${PROJECT_DIR}/core/target/ispark-core-${PROJECT_VERSION}.jar
 ...
 ```
 
 after which you can define a `Spark` profile for IPython by running:
-```
+```bash
 $ ipython profile create spark
 ```
 Then adding the following line into `~/.ipython/profile_spark/ipython_config.py`:
 
-```
+```python
+import os
+c = get_config()
+
 SPARK_HOME = os.environ['SPARK_HOME']
 # the above line can be replaced with: SPARK_HOME = '${INSERT_INSTALLATION_DIR_OF_SPARK}'
 MASTER = '${INSERT_YOUR_SPARK_MASTER_URL}'
 
 c.KernelManager.kernel_cmd = [SPARK_HOME+"/bin/spark-submit",
  "--master", MASTER,
- "--class", "org.tribbloid.ispark.Main",\
+ "--class", "org.tribbloid.ispark.Main", 
  "--executor-memory", "2G", #ISpark driver takes more memory than most other Spark drivers
  "--jars", "${INSERT_FULL_PATH_OF_ISPARK_UBER_JAR}",
  "${INSERT_FULL_PATH_OF_OTHER_JARS}",
@@ -69,7 +72,7 @@ Congratulation! Now you can initialize ISpark CLI or ISpark-notebook by running:
 
 ## Example
 
-```
+```scala
 In [1]: sc
 Out[1]: org.apache.spark.SparkContext@2cd972df
 
@@ -101,7 +104,7 @@ To infer the type of an expression use `%type expr`. This doesn't require
 evaluation of `expr`, only compilation up to _typer_ phase. You can also
 get compiler's internal type trees with `%type -v` or `%type --verbose`.
 
-```
+```scala
 In [1]: %type 1
 Int
 
