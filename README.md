@@ -5,6 +5,8 @@ ISpark
 
 **ISpark** is ported from [IScala](https://github.com/mattpap/IScala), all credit goes to [Mateusz Paprocki](https://github.com/mattpap)
 
+![ISpooky-notebook UI](http://i.imgur.com/gSQw6Ab.png)
+
 ## Requirements
 
 * [IPython](http://ipython.org/ipython-doc/stable/install/install.html) 2.0+
@@ -17,7 +19,7 @@ between IPython UI server and Spark cluster.
 
 ## Demo
 
-[Click me](http://ec2-54-165-231-62.compute-1.amazonaws.com:8888/notebooks/all_inclusive_do_not_create_new_notebook.ipynb) for a quick impression.
+[Click me](http://ec2-54-183-195-216.us-west-1.compute.amazonaws.com:8888/notebooks/all_inclusive_do_not_create_new_notebook.ipynb) for a quick impression.
 
 This environment is deployed on a Spark cluster with 4+ cores. It comes with no uptime guarantee and may not be accessible during maintenance.
 
@@ -68,7 +70,9 @@ Congratulation! Now you can initialize ISpark CLI or ISpark-notebook by running:
 
 `ipython console --profile spark` OR `ipython notebook --profile spark`
 
-(Support for the data collection/enrichment engine SpookyStuff has been moved to an independent project: https://github.com/tribbloid/ISpooky.git)
+![ISpooky dir](http://i.imgur.com/BNGh1j8.png)
+
+> (Support for the data collection/enrichment engine SpookyStuff has been moved to an independent project: https://github.com/tribbloid/ISpooky.git)
 
 ## Example
 
