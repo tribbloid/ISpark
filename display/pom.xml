@@ -9,19 +9,25 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>ispark-macros</artifactId>
+    <artifactId>ispark-display</artifactId>
 
     <dependencies>
 
         <dependency>
-            <groupId>com.typesafe.play</groupId>
-            <artifactId>play-json_${scala.binary.version}</artifactId>
-            <version>2.3.2</version>
+            <groupId>org.tribbloid.ispark</groupId>
+            <artifactId>ispark-macros</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.pegdown</groupId>
+            <artifactId>pegdown</artifactId>
+            <version>1.4.2</version>
         </dependency>
         <dependency>
-            <groupId>org.scalamacros</groupId>
-            <artifactId>quasiquotes_${scala.binary.version}</artifactId>
-            <version>2.0.1</version>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-all</artifactId>
+            <version>4.1</version>
         </dependency>
 
     </dependencies>

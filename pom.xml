@@ -11,7 +11,7 @@
         <scala.version>2.10.4</scala.version>
         <scala.binary.version>2.10</scala.binary.version>
         <hadoop.version>2.4.0</hadoop.version>
-        <spark.version>1.1.1</spark.version>
+        <spark.version>1.2.1</spark.version>
         <PermGen>512m</PermGen>
         <MaxPermGen>2g</MaxPermGen>
     </properties>
@@ -19,7 +19,7 @@
     <groupId>org.tribbloid.ispark</groupId>
     <artifactId>ispark</artifactId>
     <packaging>pom</packaging>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.2.0-SNAPSHOT</version>
     <url>https://github.com/tribbloid/ispark</url>
 
     <repositories>
@@ -58,8 +58,9 @@
     </repositories>
 
     <modules>
-        <module>core</module>
         <module>macros</module>
+        <module>display</module>
+        <module>core</module>
     </modules>
 
     <dependencies>
@@ -69,6 +70,13 @@
             <artifactId>scalatest_${scala.binary.version}</artifactId>
             <version>2.2.1</version>
             <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-repl_${scala.binary.version}</artifactId>
+            <version>${spark.version}</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
