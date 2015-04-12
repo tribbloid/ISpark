@@ -1,97 +1,47 @@
 package org.tribbloid.ispark.interpreters
 
-import org.apache.spark.SparkContext
-import org.apache.spark.repl._
+import org.apache.spark.repl.{SparkCommandLine, SparkILoopExt, SparkJLineCompletion}
 import org.tribbloid.ispark.Util
 import org.tribbloid.ispark.display.Data
 
-import scala.collection.immutable
 import scala.language.postfixOps
-import scala.tools.nsc.Settings
 import scala.tools.nsc.interpreter._
-import scala.tools.nsc.util.ScalaClassLoader
 
+class SparkInterpreter(
+                        val output: java.io.StringWriter = new java.io.StringWriter,
+                        master: Option[String] = None,
+                        usejavacp: Boolean=true,
+                        val appName: String = "ISpark"
+                        ) extends SparkILoopExt(None, new java.io.PrintWriter(output), master) { //no input stream except interpret
 
-class SparkInterpreter(args: Array[String], usejavacp: Boolean=true, val appName: String = "ISpark") {
+  def init(args: Array[String]): Unit = assert(this.process(args))
 
-  val output = new java.io.StringWriter
-  val printer = new java.io.PrintWriter(output)
+  override def process(args: Array[String]): Boolean = {
+    val command = new SparkCommandLine(args.toList, println(_))
+    assert(command.ok)
 
-  val iLoop = new SparkILoop(None, printer, None)
-  assert(process(args))
+    command.settings.embeddedDefaults(this.getClass.getClassLoader)
 
-  var sc: SparkContext = _
+    command.settings.usejavacp.value = usejavacp
 
-  def intp = iLoop.intp
-
-  /** process command-line arguments and do as they request */
-  private def process(args: Array[String]): Boolean = {
-    val cl = new SparkCommandLine(args.toList, println(_))
-    cl.settings.embeddedDefaults[this.type]
-    cl.settings.usejavacp.value = usejavacp
-
-    cl.ok && process(cl.settings)
+    command.ok && process(command.settings)
   }
 
-  private def process(settings: Settings): Boolean = ScalaClassLoader.savingContextLoader {
-    if (getMaster == "yarn-client") System.setProperty("SPARK_YARN_MODE", "true")
-
-    iLoop.settings = settings
-
-    iLoop.createInterpreter()
-
-    initializeSpark()
-
-    // it is broken on startup; go ahead and exit
-    if (intp.reporter.hasErrors) return false
-
-    intp.initializeSynchronous()
-
-    true
-  }
-
-  protected def initializeSpark() {
-    sc = iLoop.createSparkContext()
-    quietBind(NamedParam[SparkContext]("sc", sc), immutable.List("@transient")) match {
-      case IR.Success =>
-      case _ => throw new RuntimeException("Spark failed to initialize")
-    }
-
-    interpret("""
-                |import org.apache.spark.SparkContext._
-                |import org.tribbloid.ispark.display.Display
-              """.stripMargin) match {
-      case _: Results.Success =>
-      case Results.Exception(ee) => throw new RuntimeException("SparkContext failed to be imported", ee)
-      case _ => throw new RuntimeException("SparkContext failed to be imported\n"+this.output.toString)
-    }
-  }
-
-  private def getMaster: String = {
-    val envMaster = sys.env.get("MASTER")
-    val propMaster = sys.props.get("spark.master")
-    propMaster.orElse(envMaster).getOrElse("local[*]")
-  }
-
-
-  protected def sparkCleanUp(): Unit = {
-    if (sc != null)
-      sc.stop()
+  private def stopSpark(): Unit = {
+    if (this.sparkContext != null)
+      this.sparkContext.stop()
   }
 
   def close(): Unit = {
-    if (intp ne null) {
-      sparkCleanUp()
-      intp.close()
-      iLoop.intp = null
-    }
+    stopSpark()
+    this.closeInterpreter()
   }
 
   override def finalize() {
     try{
       close()
     }catch{
-      case e: Throwable => Util.log("FINALIZE FAILED! " + e);
+      case e: Throwable => Util.log("FINALIZATION FAILED! " + e);
     }finally{
       super.finalize()
     }
@@ -101,14 +51,18 @@ class SparkInterpreter(args: Array[String], usejavacp: Boolean=true, val appName
     output.getBuffer.setLength(0)
   }
 
-  private val completion = new SparkJLineCompletion(intp)
+  private lazy val completion = new SparkJLineCompletion(this)
 
-  def completions(input: String): List[String] = completion.topLevelFor(Parsed.dotted(input, input.length))
+  def completions(input: String): List[String] = {
+    val c: Completion.ScalaCompleter = completion.completer()
+    val ret: Completion.Candidates = c.complete(input, input.length)
+    ret.candidates
+  }
 
-  def interpret(line: String, synthetic: Boolean = false): Results.Result = {
+  def interpretGetResult(line: String): Results.Result = {
 
     val res = try{
-      intp.interpret(line, synthetic)
+      this.interpret(line)
     }
     catch {
       case e: Throwable => return Results.Exception(e)
@@ -119,14 +73,14 @@ class SparkInterpreter(args: Array[String], usejavacp: Boolean=true, val appName
       case IR.Error =>
         Results.Error
       case IR.Success =>
-        val mostRecentVar = intp.mostRecentVar
+        val mostRecentVar = this.mostRecentVar
         if (mostRecentVar == "") Results.NoValue
         else {
-          val value = intp.valueOfTerm(mostRecentVar)
+          val value = this.valueOfTerm(mostRecentVar)
           value match {
             case None => Results.NoValue
             case Some(v) =>
-              val tpe = intp.typeOfTerm(mostRecentVar)
+              val tpe = this.typeOfTerm(mostRecentVar)
 
               val data = Data.parse(v)
               val result = Results.Value(v, tpe.toString(), data)
@@ -136,52 +90,20 @@ class SparkInterpreter(args: Array[String], usejavacp: Boolean=true, val appName
     }
   }
 
-  def bind(name: String, boundType: String, value: Any, modifiers: List[String] = Nil): IR.Result = intp.bind(name, boundType, value, modifiers)
+  def cancel() = {
+    if (this.sparkContext != null) {
+      this.sparkContext.cancelAllJobs()
+    }
+  }
 
-  def bind(p: NamedParam, modifiers: List[String]): IR.Result = bind(p.name, p.tpe, p.value, modifiers)
+  def typeInfo(code: String, verbose: Boolean): Option[String] = {
 
-  def quietBind(p: NamedParam, modifiers: List[String]): IR.Result = intp.beQuietDuring(bind(p, modifiers))
+    val symbol = this.symbolOfLine(code)
 
-  //  def compile(code: String): Boolean = {
-  //    val intp = intp
-  //
-  //    val imports = intp.definedTypes ++ intp.definedTerms match {
-  //      case Nil => "/* imports */"
-  //      case names => names.map(intp.pathToName).map("import " + _).mkString("\n  ")
-  //    }
-  //
-  //    val source = s"""
-  //            |$imports
-  //            |
-  //            |$code
-  //            """.stripMargin
-  //
-  //    val bindRep = new intp.ReadEvalPrint()
-  //    bindRep.compile(source)
-  //  }
+    val tpe = this.typeOfExpression("code", silent = true)
+    val info = tpe.toString()
 
-  def cancel() = {}
-
-  def stringify(obj: Any): String = unmangle(obj.toString)
-
-  private def unmangle(string: String): String = intp.naming.unmangle(string)
-
-  def typeInfo(code: String, deconstruct: Boolean): Option[String] = {
-
-    val intp0 = this.intp
-
-    import intp0.global._
-    val symbol = intp0.symbolOfLine(code)
-
-    if (symbol.exists) {
-      Some(afterTyper {
-        val info = symbol.info match {
-          case NullaryMethodType(restpe) if symbol.isAccessor => restpe
-          case _                                           => symbol.info
-        }
-        stringify(if (deconstruct) intp0.deconstruct.show(info) else info)
-      })
-    } else None
+    Some(info)
   }
 }
 

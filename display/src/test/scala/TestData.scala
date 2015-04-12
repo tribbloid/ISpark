@@ -1,5 +1,6 @@
 import org.scalatest.FunSuite
-import org.tribbloid.ispark.display.Display.Markdown
+import org.tribbloid.ispark.display.dsl.Display
+import Display.Markdown
 import org.tribbloid.ispark.display.{MIME, Data}
 
 /**

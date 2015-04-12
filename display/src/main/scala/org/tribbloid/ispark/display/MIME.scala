@@ -6,7 +6,7 @@ import javax.imageio.ImageIO
 
 import com.sun.org.apache.xml.internal.security.utils.Base64
 
-import scala.xml.NodeSeq
+import scala.xml.{NodeBuffer, NodeSeq}
 
 sealed abstract class MIME(val name: String) {
   type Parse = PartialFunction[Any, Option[String]]
@@ -34,9 +34,24 @@ object MIME {
     }
   }
 
+//  val a: NodeBuffer =
+//    <tr>
+//      <th>Header 1</th>
+//      <th>Header 2</th>
+//    </tr>
+//      <tr>
+//        <td>row 1, cell 1</td>
+//        <td>row 1, cell 2</td>
+//      </tr>
+//      <tr>
+//        <td>row 2, cell 1</td>
+//        <td>row 2, cell 2</td>
+//      </tr>
+
   case object `text/html` extends MIME("text/html") {
     override def parse = {
       case obj: NodeSeq => Some(obj.toString())
+      case obj: NodeBuffer => Some(obj.mkString(""))
       case obj: HTMLDisplayObject => Some(obj.toHTML)
       case _ => None
     }

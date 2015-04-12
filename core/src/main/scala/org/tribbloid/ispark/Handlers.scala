@@ -123,7 +123,7 @@ class ExecuteHandler(parent: Parent) extends Handler[execute_request](parent) {
         case Magic(name, _, None) =>
           ipy.send_error(msg, n, s"ERROR: Line magic function `%$name` not found.")
         case _ =>
-          capture(msg) { interpreter.interpret(code) } match {
+          capture(msg) { interpreter.interpretGetResult(code) } match {
             case result @ Results.Value(value, tpe, repr) if !silent =>
               if (store_history) {
                 repr.default foreach { output =>

@@ -59,7 +59,8 @@ class Main(options: Options) extends Parent {
       profile
   }
 
-  override lazy val interpreter =  new SparkInterpreter(options.tail.toArray)
+  override lazy val interpreter =  new SparkInterpreter()
+  interpreter.init(options.tail.toArray)
 
   val zmq = new Sockets(profile)
   val ipy = new Communication(zmq, profile)

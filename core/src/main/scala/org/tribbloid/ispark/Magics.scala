@@ -27,11 +27,6 @@ object EntireParsers extends MagicParsers[String] {
     def magic: Parser[String] = ".*".r
 }
 
-sealed trait Op
-case object Add extends Op
-case object Del extends Op
-case object Show extends Op
-
 case class TypeSpec(code: String, verbose: Boolean)
 
 object TypeParser extends MagicParsers[TypeSpec] {
@@ -69,17 +64,8 @@ object Magic {
     }
 }
 
-abstract class EmptyMagic(name: Symbol) extends Magic(name, EmptyParsers) {
-    def handle(interpreter: SparkInterpreter, unit: Unit) = handle(interpreter)
-    def handle(interpreter: SparkInterpreter): Unit
-}
-
-abstract class EntireMagic(name: Symbol) extends Magic(name, EntireParsers) {
-    def handle(interpreter: SparkInterpreter, code: String)
-}
-
 object TypeMagic extends Magic('type, TypeParser) {
     def handle(interpreter: SparkInterpreter, spec: TypeSpec) {
-        interpreter.typeInfo(spec.code, spec.verbose).map(println)
+        interpreter.typeInfo(spec.code, spec.verbose).foreach(println)
     }
 }
