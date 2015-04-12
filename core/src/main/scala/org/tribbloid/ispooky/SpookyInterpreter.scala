@@ -1,9 +1,7 @@
 package org.tribbloid.ispooky
 
-import org.apache.spark.annotation.DeveloperApi
 import org.apache.spark.sql.SQLContext
 import org.tribbloid.ispark.interpreters.{Results, SparkInterpreter}
-import org.tribbloid.spookystuff.{Metrics, SpookyConf, SpookyContext}
 
 import scala.collection.immutable
 import scala.language.reflectiveCalls
