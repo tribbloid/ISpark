@@ -53,12 +53,11 @@ MASTER = '${INSERT_YOUR_SPARK_MASTER_URL}'
 
 c.KernelManager.kernel_cmd = [SPARK_HOME+"/bin/spark-submit",
  "--master", MASTER,
- "--class", "org.tribbloid.ispark.Main", 
- "--executor-memory", "2G", #ISpark driver takes more memory than most other Spark drivers
- "--jars", "${INSERT_FULL_PATH_OF_ISPARK_UBER_JAR}",
- "${INSERT_FULL_PATH_OF_OTHER_JARS}",
+ "--class", "org.tribbloid.ispark.Main",
+ "--executor-memory", "2G",
+#(only enable this line if you have extra jars) "--jars", "${FULL_PATHS_OF_EXTRA_JARS}",
+ "${FULL_PATH_OF_MAIN_JAR}",
  "--profile", "{connection_file}",
- "--interp", "Spark",
  "--parent"]
 
 c.NotebookApp.ip = '*' # only add this line if you want IPython-notebook being open to the public
