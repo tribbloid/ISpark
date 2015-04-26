@@ -27,8 +27,12 @@ import scala.collection.mutable.ArrayBuffer
 
 class TestSparkInterpreter extends FunSuite {
 
+  def interp(master: String) = new SparkInterpreter(master = Some(master))
+
+  def setOtherProperties(): Unit = {
+  }
+
   def runInterpreter(master: String, input: String): String = {
-    val CONF_EXECUTOR_CLASSPATH = "spark.executor.extraClassPath"
 
     val cl = getClass.getClassLoader
     var paths = new ArrayBuffer[String]
@@ -43,24 +47,21 @@ class TestSparkInterpreter extends FunSuite {
     }
     val classpath = paths.mkString(File.pathSeparator)
 
-    val oldExecutorClasspath = System.getProperty(CONF_EXECUTOR_CLASSPATH)
+    val properties = System.getProperties
+    val CONF_EXECUTOR_CLASSPATH = "spark.executor.extraClassPath"
     System.setProperty(CONF_EXECUTOR_CLASSPATH, classpath)
+    setOtherProperties()
 
-    val interp = new SparkInterpreter(master = Some(master))
-    //     org.apache.spark.repl.Main.interp = interp
+    val interp = this.interp(master)
+    org.apache.spark.repl.Main.interp = interp
     interp.init(Array("-classpath", classpath))
 
     val result = interp.interpretGetResult(input)
 
-    interp.close()
+    org.apache.spark.repl.Main.interp = null
+    interp.closeAll()
 
-    //     org.apache.spark.repl.Main.interp = null
-
-    if (oldExecutorClasspath != null) {
-      System.setProperty(CONF_EXECUTOR_CLASSPATH, oldExecutorClasspath)
-    } else {
-      System.clearProperty(CONF_EXECUTOR_CLASSPATH)
-    }
+    System.setProperties(properties)
 
     result.toString
   }
@@ -119,12 +120,13 @@ class TestSparkInterpreter extends FunSuite {
   test("dynamic case class") {
     val output = runInterpreter("local",
       """
-        |case class Circle(rad:Float)
-        |val rdd = sc.parallelize(1 to 10000).map(i=>Circle(i.toFloat))
-        |rdd.take(10)
+        |case class Circle(rad:Float);
+        |val rdd = sc.parallelize(1 to 100).map(i=>Circle(i.toFloat))
+        |rdd.take(5)
       """.stripMargin)
     assertDoesNotContain("Error", output)
     assertDoesNotContain("Exception", output)
+    assertContains("Data(List((text/plain,Array(Circle(1.0), Circle(2.0), Circle(3.0), Circle(4.0), Circle(5.0)))))", output)
   }
 
   test("external functions") {
@@ -286,7 +288,7 @@ class TestSparkInterpreter extends FunSuite {
   test("collecting objects of class defined in repl") {
     val output = runInterpreter("local[2]",
       """
-        |case class Foo(i: Int)
+        |case class Foo(i: Int);
         |val ret = sc.parallelize((1 to 100).map(Foo), 10).collect()
       """.stripMargin)
     assertDoesNotContain("Error", output)
@@ -294,16 +296,23 @@ class TestSparkInterpreter extends FunSuite {
     assertContains("Data(List((text/plain,Array(Foo(1), Foo(2), Foo(3),", output)
   }
 
-  //TODO: this test will be fixed in 1.3.1 & 1.4.0
-  //  test("collecting objects of class defined in repl - shuffling") {
-  //    val output = runInterpreter("local-cluster[1,1,512]",
-  //      """
-  //        |case class Foo(i: Int)
-  //        |val list = List((1, Foo(1)), (1, Foo(2)))
-  //        |val ret = sc.parallelize(list).groupByKey().collect()
-  //      """.stripMargin)
-  //    assertDoesNotContain("Error", output)
-  //    assertDoesNotContain("Exception", output)
-  //    assertContains("ret: Array[(Int, Iterable[Foo])] = Array((1,", output)
-  //  }
+  test("collecting objects of class defined in repl - shuffling") {
+    val output = runInterpreter("local-cluster[1,1,512]",
+      """
+        |case class Foo(i: Int);
+        |val list = List((1, Foo(1)), (1, Foo(2)))
+        |val ret = sc.parallelize(list).groupByKey().collect()
+      """.stripMargin)
+    assertDoesNotContain("Error", output)
+    assertDoesNotContain("Exception", output)
+    assertContains("Data(List((text/plain,Array((1,CompactBuffer(Foo(1), Foo(2)))))))", output)
+  }
+}
+
+class WithKryoSerializer extends TestSparkInterpreter {
+
+  override def setOtherProperties(): Unit = {
+
+    System.setProperty("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+  }
 }

@@ -49,6 +49,7 @@ class ReplSuite extends FunSuite {
 
     val oldExecutorClasspath = System.getProperty(CONF_EXECUTOR_CLASSPATH)
     System.setProperty(CONF_EXECUTOR_CLASSPATH, classpath)
+    System.setProperty("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
 
     val interp = new SparkILoop(in, new PrintWriter(out), master)
     org.apache.spark.repl.Main.interp = interp
@@ -315,7 +316,7 @@ class ReplSuite extends FunSuite {
     assertDoesNotContain("Exception", output)
     assertContains("ret: Array[Foo] = Array(Foo(1),", output)
   }
-  
+
   test("collecting objects of class defined in repl - shuffling") {
     val output = runInterpreter("local-cluster[1,1,512]",
       """

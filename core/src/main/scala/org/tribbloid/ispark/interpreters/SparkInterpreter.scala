@@ -20,26 +20,16 @@ class SparkInterpreter(
     val command = new SparkCommandLine(args.toList, println(_))
     assert(command.ok)
 
-    command.settings.embeddedDefaults(this.getClass.getClassLoader)
+    command.settings.embeddedDefaults(this.getClass.getClassLoader) //this ClassLoader link is optional if no bind is used.
 
     command.settings.usejavacp.value = usejavacp
 
     command.ok && process(command.settings)
   }
 
-  private def stopSpark(): Unit = {
-    if (this.sparkContext != null)
-      this.sparkContext.stop()
-  }
-
-  def close(): Unit = {
-    stopSpark()
-    this.closeInterpreter()
-  }
-
   override def finalize() {
     try{
-      close()
+      closeAll()
     }catch{
       case e: Throwable => Util.log("FINALIZATION FAILED! " + e);
     }finally{
@@ -53,16 +43,28 @@ class SparkInterpreter(
 
   private lazy val completion = new SparkJLineCompletion(this)
 
-  def completions(input: String): List[String] = {
+  def completions(input: String): List[String] = { //TODO: need more testing and comparison with old implementation
     val c: Completion.ScalaCompleter = completion.completer()
     val ret: Completion.Candidates = c.complete(input, input.length)
     ret.candidates
   }
 
+  //  def interpretEnsureSuccess(code: String): Unit = {
+  //    val result = intp.interpret(code)
+  //    assert(result == IR.Success,
+  //      s"""
+  //         |Fail to interpret:
+  //         |$code
+  //          |$result
+  //          |${this.out}
+  //       """.stripMargin
+  //    )
+  //  }
+
   def interpretGetResult(line: String): Results.Result = {
 
     val res = try{
-      this.interpret(line)
+      this.interpretBlock(line)
     }
     catch {
       case e: Throwable => return Results.Exception(e)

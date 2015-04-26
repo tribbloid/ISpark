@@ -3,28 +3,28 @@ package org.tribbloid.ispark.msg
 import org.tribbloid.ispark.UUID
 import org.tribbloid.ispark.display.{Data, MIME}
 
-object ExecutionStatus extends Enumeration {
+object ExecutionStatuses extends Enumeration {
   type ExecutionStatus = Value
   val ok = Value
   val error = Value
   val abort = Value
 }
 
-object HistAccessType extends Enumeration {
+object HistAccessTypes extends Enumeration {
   type HistAccessType = Value
   val range = Value
   val tail = Value
   val search = Value
 }
 
-object ExecutionState extends Enumeration {
+object ExecutionStates extends Enumeration {
   type ExecutionState = Value
   val busy = Value
   val idle = Value
   val starting = Value
 }
 
-object MsgType extends Enumeration {
+object MsgTypes extends Enumeration {
   type MsgType = Value
 
   val execute_request,
@@ -143,7 +143,7 @@ case class execute_ok_reply(
                              // Results for the user_expressions.
                              user_expressions: Map[String, String]) extends execute_reply {
 
-  val status = ExecutionStatus.ok
+  val status = ExecutionStatuses.ok
 }
 
 case class execute_error_reply(
@@ -164,13 +164,13 @@ case class execute_error_reply(
                                 // written.
                                 traceback: List[String]) extends execute_reply {
 
-  val status = ExecutionStatus.error
+  val status = ExecutionStatuses.error
 }
 
 case class execute_abort_reply(
                                 execution_count: Int) extends execute_reply {
 
-  val status = ExecutionStatus.abort
+  val status = ExecutionStatuses.abort
 }
 
 case class object_info_request(
@@ -534,12 +534,12 @@ package object formats {
 
   import org.tribbloid.ispark.json.JsonImplicits._
 
-  implicit val MsgTypeFormat = EnumJson.format(MsgType)
+  implicit val MsgTypeFormat = EnumJson.format(MsgTypes)
   implicit val HeaderFormat = Json.format[Header]
 
-  implicit val ExecutionStatusFormat = EnumJson.format(ExecutionStatus)
-  implicit val ExecutionStateFormat = EnumJson.format(ExecutionState)
-  implicit val HistAccessTypeFormat = EnumJson.format(HistAccessType)
+  implicit val ExecutionStatusFormat = EnumJson.format(ExecutionStatuses)
+  implicit val ExecutionStateFormat = EnumJson.format(ExecutionStates)
+  implicit val HistAccessTypeFormat = EnumJson.format(HistAccessTypes)
 
   implicit val ArgSpecFormat = Json.format[ArgSpec]
 

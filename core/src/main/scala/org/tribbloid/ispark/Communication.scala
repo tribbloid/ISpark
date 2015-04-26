@@ -52,17 +52,17 @@ class Communication(zmq: Sockets, connection: Profile) {
       val _parent_header = parent_header.as[Option[Header]]
       val _metadata = metadata.as[Metadata]
       val _content = _header.msg_type match {
-        case MsgType.execute_request     => Some(content.as[execute_request])
-        case MsgType.complete_request    => Some(content.as[complete_request])
-        case MsgType.kernel_info_request => Some(content.as[kernel_info_request])
-        case MsgType.object_info_request => Some(content.as[object_info_request])
-        case MsgType.connect_request     => Some(content.as[connect_request])
-        case MsgType.shutdown_request    => Some(content.as[shutdown_request])
-        case MsgType.history_request     => Some(content.as[history_request])
-        case MsgType.input_reply         => Some(content.as[input_reply])
-        case MsgType.comm_open           => Some(content.as[comm_open])
-        case MsgType.comm_msg            => Some(content.as[comm_msg])
-        case MsgType.comm_close          => Some(content.as[comm_close])
+        case MsgTypes.execute_request     => Some(content.as[execute_request])
+        case MsgTypes.complete_request    => Some(content.as[complete_request])
+        case MsgTypes.kernel_info_request => Some(content.as[kernel_info_request])
+        case MsgTypes.object_info_request => Some(content.as[object_info_request])
+        case MsgTypes.connect_request     => Some(content.as[connect_request])
+        case MsgTypes.shutdown_request    => Some(content.as[shutdown_request])
+        case MsgTypes.history_request     => Some(content.as[history_request])
+        case MsgTypes.input_reply         => Some(content.as[input_reply])
+        case MsgTypes.comm_open           => Some(content.as[comm_open])
+        case MsgTypes.comm_msg            => Some(content.as[comm_msg])
+        case MsgTypes.comm_close          => Some(content.as[comm_close])
         case _                           =>
           warn(s"Unexpected message type: ${_header.msg_type}")
           None
@@ -87,7 +87,7 @@ class Communication(zmq: Sockets, connection: Profile) {
       Header(msg_id=UUID.uuid4(),
         username="scala_kernel",
         session=UUID.uuid4(),
-        msg_type=MsgType.status),
+        msg_type=MsgTypes.status),
       None,
       Metadata(),
       status(
@@ -95,7 +95,7 @@ class Communication(zmq: Sockets, connection: Profile) {
   }
 
   def send_ok(msg: Msg[_], execution_count: Int) {
-    send(zmq.requests, msg.reply(MsgType.execute_reply,
+    send(zmq.requests, msg.reply(MsgTypes.execute_reply,
       execute_ok_reply(
         execution_count=execution_count,
         payload=Nil,
@@ -107,8 +107,8 @@ class Communication(zmq: Sockets, connection: Profile) {
   }
 
   def send_error(msg: Msg[_], err: pyerr) {
-    publish(msg.pub(MsgType.pyerr, err))
-    send(zmq.requests, msg.reply(MsgType.execute_reply,
+    publish(msg.pub(MsgTypes.pyerr, err))
+    send(zmq.requests, msg.reply(MsgTypes.execute_reply,
       execute_error_reply(
         execution_count=err.execution_count,
         ename=err.ename,
@@ -117,23 +117,23 @@ class Communication(zmq: Sockets, connection: Profile) {
   }
 
   def send_abort(msg: Msg[_], execution_count: Int) {
-    send(zmq.requests, msg.reply(MsgType.execute_reply,
+    send(zmq.requests, msg.reply(MsgTypes.execute_reply,
       execute_abort_reply(
         execution_count=execution_count)))
   }
 
   def send_stream(msg: Msg[_], name: String, data: String) {
-    publish(msg.pub(MsgType.stream, stream(name=name, data=data)))
+    publish(msg.pub(MsgTypes.stream, stream(name=name, data=data)))
   }
 
   def send_stdin(msg: Msg[_], prompt: String) {
-    send(zmq.stdin, msg.reply(MsgType.input_request, input_request(prompt=prompt)))
+    send(zmq.stdin, msg.reply(MsgTypes.input_request, input_request(prompt=prompt)))
   }
 
   def recv_stdin(): Option[Msg[FromIPython]] = recv(zmq.stdin)
 
   def send_display_data(msg: Msg[_], data: Data) {
-    publish(msg.pub(MsgType.display_data, display_data(source="", data=data, metadata=Map.empty)))
+    publish(msg.pub(MsgTypes.display_data, display_data(source="", data=data, metadata=Map.empty)))
   }
 
   def silently[T](block: => T) {
@@ -145,12 +145,12 @@ class Communication(zmq: Sockets, connection: Profile) {
   }
 
   def busy[T](block: => T): T = {
-    send_status(ExecutionState.busy)
+    send_status(ExecutionStates.busy)
 
     try {
       block
     } finally {
-      send_status(ExecutionState.idle)
+      send_status(ExecutionStates.idle)
     }
   }
 }

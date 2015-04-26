@@ -49,18 +49,17 @@ class ReplExtSuite extends FunSuite {
 
     val oldExecutorClasspath = System.getProperty(CONF_EXECUTOR_CLASSPATH)
     System.setProperty(CONF_EXECUTOR_CLASSPATH, classpath)
+    System.setProperty("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
 
     val interp = new SparkILoopExt(None, new PrintWriter(out), Some(master))
-//    org.apache.spark.repl.Main.interp = interp
+    org.apache.spark.repl.Main.interp = interp
     interp.process(Array("-classpath", classpath))
 
-    interp.interpret(input)
+    interp.interpretBlock(input)
     interp.out.flush()
 
-//    org.apache.spark.repl.Main.interp = null
-    if (interp.sparkContext != null) {
-      interp.sparkContext.stop()
-    }
+    org.apache.spark.repl.Main.interp = null
+    interp.closeAll()
     if (oldExecutorClasspath != null) {
       System.setProperty(CONF_EXECUTOR_CLASSPATH, oldExecutorClasspath)
     } else {
@@ -151,7 +150,7 @@ class ReplExtSuite extends FunSuite {
   test("dynamic case class") {
     val output = runInterpreter("local",
       """
-        |case class Circle(rad:Float)
+        |case class Circle(rad:Float);
         |val rdd = sc.parallelize(1 to 10000).map(i=>Circle(i.toFloat))
         |rdd.take(10)
       """.stripMargin)
@@ -318,7 +317,7 @@ class ReplExtSuite extends FunSuite {
   test("collecting objects of class defined in repl") {
     val output = runInterpreter("local[2]",
       """
-        |case class Foo(i: Int)
+        |case class Foo(i: Int);
         |val ret = sc.parallelize((1 to 100).map(Foo), 10).collect()
       """.stripMargin)
     assertDoesNotContain("error:", output)
@@ -326,16 +325,15 @@ class ReplExtSuite extends FunSuite {
     assertContains("ret: Array[Foo] = Array(Foo(1),", output)
   }
 
-  //TODO: this test will be fixed in 1.3.1 & 1.4.0
-//  test("collecting objects of class defined in repl - shuffling") {
-//    val output = runInterpreter("local-cluster[1,1,512]",
-//      """
-//        |case class Foo(i: Int)
-//        |val list = List((1, Foo(1)), (1, Foo(2)))
-//        |val ret = sc.parallelize(list).groupByKey().collect()
-//      """.stripMargin)
-//    assertDoesNotContain("error:", output)
-//    assertDoesNotContain("Exception", output)
-//    assertContains("ret: Array[(Int, Iterable[Foo])] = Array((1,", output)
-//  }
+  test("collecting objects of class defined in repl - shuffling") {
+    val output = runInterpreter("local-cluster[1,1,512]",
+      """
+        |case class Foo(i: Int);
+        |val list = List((1, Foo(1)), (1, Foo(2)))
+        |val ret = sc.parallelize(list).groupByKey().collect()
+      """.stripMargin)
+    assertDoesNotContain("error:", output)
+    assertDoesNotContain("Exception", output)
+    assertContains("ret: Array[(Int, Iterable[Foo])] = Array((1,", output)
+  }
 }

@@ -74,7 +74,7 @@ class Main(options: Options) extends Parent {
     new Thread() {
       override def run() {
         debug("Terminating Main")
-        interpreter.close()
+        interpreter.closeAll()
 
         session.endSession(n)
       }
@@ -144,16 +144,16 @@ class Main(options: Options) extends Parent {
     def dispatch[T <: FromIPython](msg: Msg[T]) {
       IScala.withConn(new Conn(msg)) {
         msg.header.msg_type match {
-          case MsgType.execute_request     => ExecuteHandler(socket, msg.asInstanceOf[Msg[execute_request]])
-          case MsgType.complete_request    => CompleteHandler(socket, msg.asInstanceOf[Msg[complete_request]])
-          case MsgType.kernel_info_request => KernelInfoHandler(socket, msg.asInstanceOf[Msg[kernel_info_request]])
-          case MsgType.object_info_request => ObjectInfoHandler(socket, msg.asInstanceOf[Msg[object_info_request]])
-          case MsgType.connect_request     => ConnectHandler(socket, msg.asInstanceOf[Msg[connect_request]])
-          case MsgType.shutdown_request    => ShutdownHandler(socket, msg.asInstanceOf[Msg[shutdown_request]])
-          case MsgType.history_request     => HistoryHandler(socket, msg.asInstanceOf[Msg[history_request]])
-          case MsgType.comm_open           => CommOpenHandler(socket, msg.asInstanceOf[Msg[comm_open]])
-          case MsgType.comm_msg            => CommMsgHandler(socket, msg.asInstanceOf[Msg[comm_msg]])
-          case MsgType.comm_close          => CommCloseHandler(socket, msg.asInstanceOf[Msg[comm_close]])
+          case MsgTypes.execute_request     => ExecuteHandler(socket, msg.asInstanceOf[Msg[execute_request]])
+          case MsgTypes.complete_request    => CompleteHandler(socket, msg.asInstanceOf[Msg[complete_request]])
+          case MsgTypes.kernel_info_request => KernelInfoHandler(socket, msg.asInstanceOf[Msg[kernel_info_request]])
+          case MsgTypes.object_info_request => ObjectInfoHandler(socket, msg.asInstanceOf[Msg[object_info_request]])
+          case MsgTypes.connect_request     => ConnectHandler(socket, msg.asInstanceOf[Msg[connect_request]])
+          case MsgTypes.shutdown_request    => ShutdownHandler(socket, msg.asInstanceOf[Msg[shutdown_request]])
+          case MsgTypes.history_request     => HistoryHandler(socket, msg.asInstanceOf[Msg[history_request]])
+          case MsgTypes.comm_open           => CommOpenHandler(socket, msg.asInstanceOf[Msg[comm_open]])
+          case MsgTypes.comm_msg            => CommMsgHandler(socket, msg.asInstanceOf[Msg[comm_msg]])
+          case MsgTypes.comm_close          => CommCloseHandler(socket, msg.asInstanceOf[Msg[comm_close]])
           case _                           =>
         }
       }
@@ -177,7 +177,7 @@ class Main(options: Options) extends Parent {
   heartBeat.start()
 
   debug("Starting kernel event loop")
-  ipy.send_status(ExecutionState.starting)
+  ipy.send_status(ExecutionStates.starting)
 
   val requestsLoop = new EventLoop(zmq.requests)
   requestsLoop.setName("RequestsEventLoop")

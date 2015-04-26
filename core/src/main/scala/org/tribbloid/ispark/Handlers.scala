@@ -95,7 +95,7 @@ class ExecuteHandler(parent: Parent) extends Handler[execute_request](parent) {
     parent.nextInput()
     parent.storeInput(code)
 
-    ipy.publish(msg.pub(MsgType.pyin,
+    ipy.publish(msg.pub(MsgTypes.pyin,
       pyin(
         execution_count=n,
         code=code)))
@@ -132,7 +132,7 @@ class ExecuteHandler(parent: Parent) extends Handler[execute_request](parent) {
               }
 
               val resultMsg =  msg.pub(
-                MsgType.pyout,
+                MsgTypes.pyout,
                 pyout(
                   execution_count=n,
                   data=repr
@@ -183,9 +183,9 @@ class CompleteHandler(parent: Parent) extends Handler[complete_request](parent) 
 
     ipy.send(
       socket, msg.reply(
-        MsgType.complete_reply,
+        MsgTypes.complete_reply,
         complete_reply(
-          status=ExecutionStatus.ok,
+          status=ExecutionStatuses.ok,
           matches=matches,
           matched_text=text
         )
@@ -204,7 +204,7 @@ class KernelInfoHandler(parent: Parent) extends Handler[kernel_info_request](par
       .map(_.toInt)
       .toList
 
-    ipy.send(socket, msg.reply(MsgType.kernel_info_reply,
+    ipy.send(socket, msg.reply(MsgTypes.kernel_info_reply,
       kernel_info_reply(
         protocol_version=(4, 0),
         language_version=scalaVersion,
@@ -216,7 +216,7 @@ class ConnectHandler(parent: Parent) extends Handler[connect_request](parent) {
   import parent.ipy
 
   def apply(socket: ZMQ.Socket, msg: Msg[connect_request]) {
-    ipy.send(socket, msg.reply(MsgType.connect_reply,
+    ipy.send(socket, msg.reply(MsgTypes.connect_reply,
       connect_reply(
         shell_port=parent.profile.shell_port,
         iopub_port=parent.profile.iopub_port,
@@ -229,7 +229,7 @@ class ShutdownHandler(parent: Parent) extends Handler[shutdown_request](parent) 
   import parent.ipy
 
   def apply(socket: ZMQ.Socket, msg: Msg[shutdown_request]) {
-    ipy.send(socket, msg.reply(MsgType.shutdown_reply,
+    ipy.send(socket, msg.reply(MsgTypes.shutdown_reply,
       shutdown_reply(
         restart=msg.content.restart)))
     sys.exit()
@@ -240,7 +240,7 @@ class ObjectInfoHandler(parent: Parent) extends Handler[object_info_request](par
   import parent.ipy
 
   def apply(socket: ZMQ.Socket, msg: Msg[object_info_request]) {
-    ipy.send(socket, msg.reply(MsgType.object_info_reply,
+    ipy.send(socket, msg.reply(MsgTypes.object_info_reply,
       object_info_notfound_reply(
         name=msg.content.oname)))
   }
@@ -260,7 +260,7 @@ class HistoryHandler(parent: Parent) extends Handler[history_request](parent) {
     } yield (input.session, input.line, if (raw) input.source_raw else input.source, output.output.?)
 
     msg.content.hist_access_type match {
-      case HistAccessType.range =>
+      case HistAccessTypes.range =>
         val session = msg.content.session getOrElse 0
 
         val actualSession =
@@ -275,7 +275,7 @@ class HistoryHandler(parent: Parent) extends Handler[history_request](parent) {
 
         for (stop <- msg.content.stop)
           query = query.filter(_._2 < stop)
-      case HistAccessType.tail | HistAccessType.search =>
+      case HistAccessTypes.tail | HistAccessTypes.search =>
         // TODO: add support for `pattern` and `unique`
         query = query.sortBy(r => (r._1.desc, r._2.desc))
 
@@ -290,7 +290,7 @@ class HistoryHandler(parent: Parent) extends Handler[history_request](parent) {
       else
         rawHistory.map { case (session, line, input, output) => (session, line, Left(input)) }
 
-    ipy.send(socket, msg.reply(MsgType.history_reply,
+    ipy.send(socket, msg.reply(MsgTypes.history_reply,
       history_reply(
         history=history)))
   }

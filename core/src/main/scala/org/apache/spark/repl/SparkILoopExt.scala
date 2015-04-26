@@ -11,6 +11,7 @@ import java.io.BufferedReader
 
 import org.apache.spark.SparkContext
 import org.apache.spark.annotation.DeveloperApi
+import org.apache.spark.sql.SQLContext
 import org.apache.spark.util.Utils
 
 import scala.Predef.{println => _, _}
@@ -60,6 +61,16 @@ class SparkILoopExt(
       intp.close()
       intp = null
     }
+  }
+
+  private def sparkCleanUpExternal(): Unit = {
+    if (this.sparkContext != null)
+      this.sparkContext.stop()
+  }
+
+  def closeAll(): Unit = {
+    sparkCleanUpExternal()
+    this.closeInterpreter()
   }
 
   //  override def echo(msg: String) = {
@@ -123,22 +134,74 @@ class SparkILoopExt(
 
   def quietBind(p: NamedParam, modifiers: List[String]): IR.Result = this.beQuietDuring(bind(p, modifiers))
 
+  //TODO: only exist to circumvent some quirky classloading issue (e.g. KryoSerializer can't recognize a class before its definition is interpreted)
+  def interpretBlock(code: String, delimiter: String = ";"): IR.Result = {
+    var result: IR.Result = null
+    code.split(delimiter).foreach{
+      block =>
+        result = this.interpret(block)
+        if (result != IR.Success) return result
+    }
+    result
+  }
+
   protected def importSpark() {
     quietBind(NamedParam[SparkContext]("sc", this.createSparkContext()), immutable.List("@transient")) match {
       case IR.Success =>
       case _ => throw new RuntimeException("SparkContext failed to initialize")
     }
 
-    val result = this.beQuietDuring{
-      this.interpret("""
-                   |import org.apache.spark.SparkContext._
-                   |import org.tribbloid.ispark.display.dsl._
-                 """.stripMargin)
+    quietBind(NamedParam[SQLContext]("sqlContext", this.createSQLContext()), immutable.List("@transient")) match {
+      case IR.Success =>
+      case _ => throw new RuntimeException("SQLContext failed to initialize")
     }
-    result match {
+
+    this.beQuietDuring{
+      this.interpret("""
+                       |import org.apache.spark.SparkContext._
+                       |import org.tribbloid.ispark.display.dsl._
+                     """.stripMargin)
+    } match {
       case IR.Success =>
       case _ => throw new RuntimeException("SparkContext failed to be imported")
     }
+
+//    this.beQuietDuring{
+//      this.interpret("""
+//                       |import sqlContext.implicits._
+//                       |import sqlContext.sql
+//                       |import org.apache.spark.sql.functions._
+//                     """.stripMargin)
+//    } match {
+//      case IR.Success =>
+//      case _ => throw new RuntimeException("SQLContext failed to be imported")
+//    }
+
+    //------------------------------alternatively------------------------------
+
+    //    intp.beQuietDuring {
+    //      this.interpret("""
+    //         @transient val sc = {
+    //           val _sc = org.apache.spark.repl.Main.interp.createSparkContext()
+    //           println("Spark context available as sc.")
+    //           _sc
+    //         }
+    //                     """)
+    //      this.interpret("""
+    //               @transient val sqlContext = {
+    //                 val _sqlContext = org.apache.spark.repl.Main.interp.createSQLContext()
+    //                 println("SQL context available as sqlContext.")
+    //                 _sqlContext
+    //               }
+    //                     """)
+    //      this.interpret("""
+    //                       |import org.apache.spark.SparkContext._
+    //                       |import org.tribbloid.ispark.display.dsl._
+    //                     """.stripMargin)
+    //      this.interpret("import sqlContext.implicits._")
+    //      this.interpret("import sqlContext.sql")
+    //      this.interpret("import org.apache.spark.sql.functions._")
+    //  }
   }
 
   /** process command-line arguments and do as they request */
