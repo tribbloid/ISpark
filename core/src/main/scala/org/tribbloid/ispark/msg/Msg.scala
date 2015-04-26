@@ -280,23 +280,10 @@ case class object_info_found_reply(
 }
 
 case class complete_request(
-                             // The text to be completed, such as 'a.is'
-                             // this may be an empty string if the frontend does not do any lexing,
-                             // in which case the kernel must figure out the completion
-                             // based on 'line' and 'cursor_pos'.
-                             text: String,
-
-                             // The full line, such as 'print a.is'.  This allows completers to
-                             // make decisions that may require information about more than just the
-                             // current word.
-                             line: String,
-
-                             // The entire block of text where the line is.  This may be useful in the
-                             // case of multiline completions where more context may be needed.  Note: if
-                             // in practice this field proves unnecessary, remove it to lighten the
-                             // messages.
-
-                             block: Option[String],
+                             // The code context in which completion is requested
+                             // this may be up to an entire multiline cell, such as
+                             // 'foo = a.isal'
+                             code: String,
 
                              // The position of the cursor where the user hit 'TAB' on the line.
                              cursor_pos: Int) extends FromIPython
