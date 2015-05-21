@@ -1,6 +1,5 @@
 package org.tribbloid.ispark
 
-import org.tribbloid.ispark.Util.{debug, warn}
 import org.tribbloid.ispark.display.Data
 import org.tribbloid.ispark.json.JsonUtil._
 import org.tribbloid.ispark.msg._
@@ -19,9 +18,9 @@ class Communication(zmq: Sockets, connection: Profile) {
     val parent_header = msg.parent_header.map(toJSON(_)).getOrElse("{}")
     val metadata = toJSON(msg.metadata)
     val content = toJSON(msg.content)
+    Util.debug(s"sending: ${(idents, header, parent_header, metadata, content)}")
 
     socket.synchronized {
-      debug(s"sending: $msg")
       idents.foreach(socket.send(_, ZMQ.SNDMORE))
       socket.send(DELIMITER, ZMQ.SNDMORE)
       socket.send(hmac(header, parent_header, metadata, content), ZMQ.SNDMORE)
@@ -45,17 +44,18 @@ class Communication(zmq: Sockets, connection: Profile) {
     val expectedSignature = hmac(header, parent_header, metadata, content)
 
     if (signature != expectedSignature) {
-      error(s"Invalid HMAC signature, got $signature, expected $expectedSignature")
+      sys.error(s"Invalid HMAC signature, got $signature, expected $expectedSignature")
       None
     } else try {
       val _header = header.as[Header]
       val _parent_header = parent_header.as[Option[Header]]
       val _metadata = metadata.as[Metadata]
+      Util.debug(s"received: ${(idents, signature, header, parent_header, metadata, content)}")
       val _content = _header.msg_type match {
         case MsgTypes.execute_request     => Some(content.as[execute_request])
         case MsgTypes.complete_request    => Some(content.as[complete_request])
         case MsgTypes.kernel_info_request => Some(content.as[kernel_info_request])
-        case MsgTypes.object_info_request => Some(content.as[object_info_request])
+        case MsgTypes.inspect_request     => Some(content.as[inspect_request])
         case MsgTypes.connect_request     => Some(content.as[connect_request])
         case MsgTypes.shutdown_request    => Some(content.as[shutdown_request])
         case MsgTypes.history_request     => Some(content.as[history_request])
@@ -64,17 +64,16 @@ class Communication(zmq: Sockets, connection: Profile) {
         case MsgTypes.comm_msg            => Some(content.as[comm_msg])
         case MsgTypes.comm_close          => Some(content.as[comm_close])
         case _                           =>
-          warn(s"Unexpected message type: ${_header.msg_type}")
+          Util.warn(s"Unexpected message type: ${_header.msg_type}")
           None
       }
       _content.map { _content =>
         val msg = Msg(idents, _header, _parent_header, _metadata, _content)
-        debug(s"received: $msg")
         msg
       }
     } catch {
       case e: JsResultException =>
-        error(s"JSON deserialization error: ${e.getMessage}")
+        sys.error(s"JSON deserialization error: ${e.getMessage}")
         None
     }
   }
@@ -102,12 +101,12 @@ class Communication(zmq: Sockets, connection: Profile) {
         user_expressions=Map.empty)))
   }
 
-  def send_error(msg: Msg[_], execution_count: Int, error: String) {
-    send_error(msg, pyerr(execution_count, "", "", error.split("\n").toList))
+  def send_error(msg: Msg[_], execution_count: Int, err: String) {
+    send_error(msg, error(execution_count, "", "", err.split("\n").toList))
   }
 
-  def send_error(msg: Msg[_], err: pyerr) {
-    publish(msg.pub(MsgTypes.pyerr, err))
+  def send_error(msg: Msg[_], err: error) {
+    publish(msg.pub(MsgTypes.error, err))
     send(zmq.requests, msg.reply(MsgTypes.execute_reply,
       execute_error_reply(
         execution_count=err.execution_count,
@@ -123,9 +122,10 @@ class Communication(zmq: Sockets, connection: Profile) {
   }
 
   def send_stream(msg: Msg[_], name: String, data: String) {
-    publish(msg.pub(MsgTypes.stream, stream(name=name, data=data)))
+    publish(msg.pub(MsgTypes.stream, stream(name=name, text=data)))
   }
 
+  //TODO: never been used, try find a user case
   def send_stdin(msg: Msg[_], prompt: String) {
     send(zmq.stdin, msg.reply(MsgTypes.input_request, input_request(prompt=prompt)))
   }

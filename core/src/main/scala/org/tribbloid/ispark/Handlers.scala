@@ -1,6 +1,8 @@
 package org.tribbloid.ispark
 
+import org.apache.spark.SPARK_VERSION
 import org.tribbloid.ispark.db.DB
+import org.tribbloid.ispark.display.Data
 import org.tribbloid.ispark.interpreters.Results
 import org.tribbloid.ispark.msg._
 import org.tribbloid.ispark.msg.formats._
@@ -95,8 +97,8 @@ class ExecuteHandler(parent: Parent) extends Handler[execute_request](parent) {
     parent.nextInput()
     parent.storeInput(code)
 
-    ipy.publish(msg.pub(MsgTypes.pyin,
-      pyin(
+    ipy.publish(msg.pub(MsgTypes.execute_input,
+      execute_input(
         execution_count=n,
         code=code)))
 
@@ -132,8 +134,8 @@ class ExecuteHandler(parent: Parent) extends Handler[execute_request](parent) {
               }
 
               val resultMsg =  msg.pub(
-                MsgTypes.pyout,
-                pyout(
+                MsgTypes.execute_result,
+                execute_result(
                   execution_count=n,
                   data=repr
                 )
@@ -145,7 +147,7 @@ class ExecuteHandler(parent: Parent) extends Handler[execute_request](parent) {
             case Results.NoValue =>
               ipy.send_ok(msg, n)
             case exc @ Results.Exception(exception) =>
-              ipy.send_error(msg, pyerr.fromThrowable(n, exception))
+              ipy.send_error(msg, error.fromThrowable(n, exception))
             case Results.Error =>
               ipy.send_error(msg, n, interpreter.output.toString)
             case Results.Incomplete =>
@@ -196,17 +198,11 @@ class KernelInfoHandler(parent: Parent) extends Handler[kernel_info_request](par
   import parent.ipy
 
   def apply(socket: ZMQ.Socket, msg: Msg[kernel_info_request]) {
-    val scalaVersion = Util.scalaVersion
-      .split(Array('.', '-'))
-      .take(3)
-      .map(_.toInt)
-      .toList
 
-    ipy.send(socket, msg.reply(MsgTypes.kernel_info_reply,
-      kernel_info_reply(
-        protocol_version=(4, 0),
-        language_version=scalaVersion,
-        language="scala")))
+    ipy.send(socket, msg.reply(
+      MsgTypes.kernel_info_reply,
+      kernel_info_reply()
+    ))
   }
 }
 
@@ -234,13 +230,17 @@ class ShutdownHandler(parent: Parent) extends Handler[shutdown_request](parent) 
   }
 }
 
-class ObjectInfoHandler(parent: Parent) extends Handler[object_info_request](parent) {
+//TODO: reply something here
+class InspectHandler(parent: Parent) extends Handler[inspect_request](parent) {
   import parent.ipy
 
-  def apply(socket: ZMQ.Socket, msg: Msg[object_info_request]) {
-    ipy.send(socket, msg.reply(MsgTypes.object_info_reply,
-      object_info_notfound_reply(
-        name=msg.content.oname)))
+  def apply(socket: ZMQ.Socket, msg: Msg[inspect_request]) {
+    ipy.send(socket, msg.reply(MsgTypes.inspect_reply,
+      inspect_reply(
+        status=ExecutionStatuses.ok,
+        data = Data(),
+        metadata = Metadata()
+      )))
   }
 }
 

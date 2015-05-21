@@ -1,7 +1,7 @@
 package org.tribbloid.ispark.msg
 
-import org.tribbloid.ispark.UUID
 import org.tribbloid.ispark.display.{Data, MIME}
+import org.tribbloid.ispark.{UUID, Util}
 
 object ExecutionStatuses extends Enumeration {
   type ExecutionStatus = Value
@@ -29,8 +29,8 @@ object MsgTypes extends Enumeration {
 
   val execute_request,
   execute_reply,
-  object_info_request,
-  object_info_reply,
+  inspect_request,
+  inspect_reply,
   complete_request,
   complete_reply,
   history_request,
@@ -43,9 +43,9 @@ object MsgTypes extends Enumeration {
   shutdown_reply,
   stream,
   display_data,
-  pyin,
-  pyout,
-  pyerr,
+  execute_input,
+  execute_result,
+  error,
   status,
   input_request,
   input_reply,
@@ -62,7 +62,9 @@ case class Header(
                    msg_id: UUID,
                    username: String,
                    session: UUID,
-                   msg_type: MsgType)
+                   msg_type: MsgType,
+                   version: String = "5.0"
+                   )
 
 case class Msg[+T <: Content](
                                idents: List[String], // XXX: Should be List[UUID]?
@@ -74,10 +76,10 @@ case class Msg[+T <: Content](
   private def replyHeader(msg_type: MsgType): Header =
     header.copy(msg_id=UUID.uuid4(), msg_type=msg_type)
 
-  private def replyMsg[T <: ToIPython](idents: List[String], msg_type: MsgType, content: T, metadata: Metadata): Msg[T] =
+  private def replyMsg[V <: ToIPython](idents: List[String], msg_type: MsgType, content: V, metadata: Metadata): Msg[V] =
     Msg(idents, replyHeader(msg_type), Some(header), metadata, content)
 
-  def pub[T <: ToIPython](msg_type: MsgType, content: T, metadata: Metadata=Metadata()): Msg[T] = {
+  def pub[V <: ToIPython](msg_type: MsgType, content: V, metadata: Metadata=Metadata()): Msg[V] = {
     val tpe = content match {
       case content: stream => content.name
       case _               => msg_type.toString
@@ -85,7 +87,7 @@ case class Msg[+T <: Content](
     replyMsg(tpe :: Nil, msg_type, content, metadata)
   }
 
-  def reply[T <: ToIPython](msg_type: MsgType, content: T, metadata: Metadata=Metadata()): Msg[T] =
+  def reply[V <: ToIPython](msg_type: MsgType, content: V, metadata: Metadata=Metadata()): Msg[V] =
     replyMsg(idents, msg_type, content, metadata)
 }
 
@@ -173,111 +175,29 @@ case class execute_abort_reply(
   val status = ExecutionStatuses.abort
 }
 
-case class object_info_request(
-                                // The (possibly dotted) name of the object to be searched in all
-                                // relevant namespaces
-                                oname: String,
+case class inspect_request(
+                            //# The code context in which introspection is requested
+                            //# this may be up to an entire multiline cell.
+                            code: String,
 
-                                // The level of detail desired.  The default (0) is equivalent to typing
-                                // 'x?' at the prompt, 1 is equivalent to 'x??'.
-                                detail_level: Int) extends FromIPython
+                            //# The cursor position within 'code' (in unicode characters) where inspection is requested
+                            cursor_pos: Int,
 
-case class ArgSpec(
-                    // The names of all the arguments
-                    args: List[String],
-                    // The name of the varargs (*args), if any
-                    varargs: String,
-                    // The name of the varkw (**kw), if any
-                    varkw: String,
-                    // The values (as strings) of all default arguments.  Note
-                    // that these must be matched *in reverse* with the 'args'
-                    // list above, since the first positional args have no default
-                    // value at all.
-                    defaults: List[String])
+                            //# The level of detail desired.  In IPython, the default (0) is equivalent to typing
+                            //# 'x?' at the prompt, 1 is equivalent to 'x??'.
+                            //# The difference is up to kernels, but in IPython level 1 includes the source code
+                            //# if available.
+                            detail_level: Int
+                            ) extends FromIPython
 
-sealed trait object_info_reply extends ToIPython {
-  // The name the object was requested under
-  val name: String
+case class inspect_reply(
+                          //# 'ok' if the request succeeded or 'error', with error information as in all other replies.
+                          status: ExecutionStatus,
 
-  // Boolean flag indicating whether the named object was found or not.  If
-  // it's false, all other fields will be empty.
-  val found: Boolean
-}
-
-case class object_info_notfound_reply(
-                                       name: String) extends object_info_reply {
-
-  val found = false
-}
-
-case class object_info_found_reply(
-                                    name: String,
-
-                                    // Flags for magics and system aliases
-                                    ismagic: Boolean,
-                                    isalias: Boolean,
-
-                                    // The name of the namespace where the object was found ('builtin',
-                                    // 'magics', 'alias', 'interactive', etc.)
-                                    namespace: String,
-
-                                    // The type name will be type.__name__ for normal Python objects, but it
-                                    // can also be a string like 'Magic function' or 'System alias'
-                                    type_name: String,
-
-                                    // The string form of the object, possibly truncated for length if
-                                    // detail_level is 0
-                                    string_form: String,
-
-                                    // For objects with a __class__ attribute this will be set
-                                    base_class: String,
-
-                                    // For objects with a __len__ attribute this will be set
-                                    length: String,
-
-                                    // If the object is a function, class or method whose file we can find,
-                                    // we give its full path
-                                    file: String,
-
-                                    // For pure Python callable objects, we can reconstruct the object
-                                    // definition line which provides its call signature.  For convenience this
-                                    // is returned as a single 'definition' field, but below the raw parts that
-                                    // compose it are also returned as the argspec field.
-                                    definition: String,
-
-                                    // The individual parts that together form the definition string.  Clients
-                                    // with rich display capabilities may use this to provide a richer and more
-                                    // precise representation of the definition line (e.g. by highlighting
-                                    // arguments based on the user's cursor position).  For non-callable
-                                    // objects, this field is empty.
-                                    argspec: ArgSpec,
-
-                                    // For instances, provide the constructor signature (the definition of
-                                    // the __init__ method):
-                                    init_definition: String,
-
-                                    // Docstrings: for any object (function, method, module, package) with a
-                                    // docstring, we show it.  But in addition, we may provide additional
-                                    // docstrings.  For example, for instances we will show the constructor
-                                    // and class docstrings as well, if available.
-                                    docstring: String,
-
-                                    // For instances, provide the constructor and class docstrings
-                                    init_docstring: String,
-                                    class_docstring: String,
-
-                                    // If it's a callable object whose call method has a separate docstring and
-                                    // definition line:
-                                    call_def: String,
-                                    call_docstring: String,
-
-                                    // If detail_level was 1, we also try to find the source code that
-                                    // defines the object, if possible.  The string 'None' will indicate
-                                    // that no source was found.
-                                    source: String) extends object_info_reply {
-
-  val found = true
-}
+                          //# data can be empty if nothing is found
+                          data: Data,
+                          metadata: Metadata
+                          ) extends ToIPython
 
 case class complete_request(
                              // The code context in which completion is requested
@@ -361,23 +281,61 @@ case class kernel_info_reply(
                               // there is any backward incompatible change.
                               // The second integer indicates minor version.  It is incremented when
                               // there is any backward compatible change.
-                              protocol_version: (Int, Int),
+                              protocol_version: String = "5.0",
 
-                              // IPython version number (optional).
-                              // Non-python kernel backend may not have this version number.
-                              // The last component is an extra field, which may be 'dev' or
-                              // 'rc1' in development version.  It is an empty string for
-                              // released version.
-                              ipython_version: Option[(Int, Int, Int, String)]=None,
+                              //# The kernel implementation name
+                              //# (e.g. 'ipython' for the IPython kernel)
+                              implementation: String = "iSpark",
 
-                              // Language version number (mandatory).
-                              // It is Python version number (e.g., [2, 7, 3]) for the kernel
-                              // included in IPython.
-                              language_version: List[Int],
+                              //# Implementation version number.
+                              //# The version number of the kernel's implementation
+                              //# (e.g. IPython.__version__ for the IPython kernel)
+                              implementation_version: String = "0.2.0",
 
-                              // Programming language in which kernel is implemented (mandatory).
-                              // Kernel included in IPython returns 'python'.
-                              language: String) extends ToIPython
+                              //# Information about the language of code for the kernel
+                              language_info: LanguageInfo = LanguageInfo(),
+
+                              //# A banner of information about the kernel,
+                              //# which may be desplayed in console environments.
+                              banner: String = Util.kernel_info
+
+                              //# Optional: A list of dictionaries, each with keys 'text' and 'url'.
+                              //# These will be displayed in the help menu in the notebook UI.
+                              //'help_links': [
+                              //{'text': str, 'url': str}
+                              //],
+
+                              ) extends ToIPython
+
+case class LanguageInfo(
+                         //# Name of the programming language in which kernel is implemented.
+                         //# Kernel included in IPython returns 'python'.
+                         name: String = "Scala",
+
+                         //# Language version number.
+                         //# It is Python version number (e.g., '2.7.3') for the kernel
+                         //# included in IPython.
+                         version: String = Util.scalaVersion,
+
+                         //# mimetype for script files in this language
+                         mimetype: String = "text/x-scala",
+
+                         //# Extension without the dot, e.g. 'py'
+                         file_extension: String = "scala",
+
+                         //# Pygments lexer, for highlighting
+                         //# Only needed if it differs from the top level 'language' field.
+                         //                          pygments_lexer: String,
+
+                         //# Codemirror mode, for for highlighting in the notebook.
+                         //# Only needed if it differs from the top level 'language' field.
+                         codemirror_mode: String = "Scala"
+
+                         //# Nbconvert exporter, if notebooks written with this kernel should
+                         //# be exported with something other than the general 'script'
+                         //# exporter.
+                         //                          nbconvert_exporter: String
+                         ) extends ToIPython
 
 case class shutdown_request(
                              // whether the shutdown is final, or precedes a restart
@@ -392,8 +350,10 @@ case class stream(
                    name: String,
 
                    // The data is an arbitrary string to be written to that stream
-                   data: String) extends ToIPython
+                   text: String) extends ToIPython
 
+//TODO: Changed in version 5.0: application/json data should be unpacked JSON data, not double-serialized as a JSON string.
+//See http://ipython.org/ipython-doc/3/development/messaging.html#messaging
 case class display_data(
                          // Who create the data
                          source: String,
@@ -404,30 +364,32 @@ case class display_data(
                          data: Data,
 
                          // Any metadata that describes the data
-                         metadata: Metadata) extends ToIPython
+                         metadata: Metadata
+                         ) extends ToIPython
 
-case class pyin(
-                 // Source code to be executed, one or more lines
-                 code: String,
+case class execute_input(
+                          // Source code to be executed, one or more lines
+                          code: String,
 
-                 // The counter for this execution is also provided so that clients can
-                 // display it, since IPython automatically creates variables called _iN
-                 // (for input prompt In[N]).
-                 execution_count: Int) extends ToIPython
+                          // The counter for this execution is also provided so that clients can
+                          // display it, since IPython automatically creates variables called _iN
+                          // (for input prompt In[N]).
+                          execution_count: Int) extends ToIPython
 
-case class pyout(
-                  // The counter for this execution is also provided so that clients can
-                  // display it, since IPython automatically creates variables called _N
-                  // (for prompt N).
-                  execution_count: Int,
+case class execute_result(
+                           // The counter for this execution is also provided so that clients can
+                           // display it, since IPython automatically creates variables called _N
+                           // (for prompt N).
+                           execution_count: Int,
 
-                  // data and metadata are identical to a display_data message.
-                  // the object being displayed is that passed to the display hook,
-                  // i.e. the *result* of the execution.
-                  data: Data,
-                  metadata: Metadata = Metadata()) extends ToIPython
+                           // data and metadata are identical to a display_data message.
+                           // the object being displayed is that passed to the display hook,
+                           // i.e. the *result* of the execution.
+                           data: Data,
+                           metadata: Metadata = Metadata()
+                           ) extends ToIPython
 
-case class pyerr(
+case class error(
                   execution_count: Int,
 
                   // Exception name, as a string
@@ -445,9 +407,9 @@ case class pyerr(
                   // written.
                   traceback: List[String]) extends ToIPython
 
-object pyerr {
+object error {
   // XXX: can't use apply(), because of https://github.com/playframework/playframework/issues/2031
-  def fromThrowable(execution_count: Int, exception: Throwable): pyerr = {
+  def fromThrowable(execution_count: Int, exception: Throwable): error = {
     val name = exception.getClass.getName
     val value = Option(exception.getMessage) getOrElse ""
     val stacktrace = exception
@@ -456,13 +418,14 @@ object pyerr {
       .toList
     val traceback = s"$name: $value" :: stacktrace.map("    " + _)
 
-    pyerr(execution_count=execution_count,
+    error(execution_count=execution_count,
       ename=name,
       evalue=value,
       traceback=traceback)
   }
 }
 
+//TODO: Changed in version 5.0: Busy and idle messages should be sent before/after handling every message, not just execution.
 case class status(
                    // When the kernel starts to execute code, it will enter the 'busy'
                    // state and when it finishes, it will enter the 'idle' state.
@@ -476,7 +439,9 @@ case class clear_output(
                          _wait: Boolean) extends ToIPython
 
 case class input_request(
-                          prompt: String) extends ToIPython
+                          prompt: String,
+                          password: Boolean = false
+                          ) extends ToIPython
 
 case class input_reply(
                         value: String) extends FromIPython
@@ -519,7 +484,7 @@ package object formats {
     }
   }
 
-  import org.tribbloid.ispark.json.JsonImplicits._
+  import org.tribbloid.ispark.json.JsonImplicits._ //DO NOT omit this line!
 
   implicit val MsgTypeFormat = EnumJson.format(MsgTypes)
   implicit val HeaderFormat = Json.format[Header]
@@ -528,13 +493,11 @@ package object formats {
   implicit val ExecutionStateFormat = EnumJson.format(ExecutionStates)
   implicit val HistAccessTypeFormat = EnumJson.format(HistAccessTypes)
 
-  implicit val ArgSpecFormat = Json.format[ArgSpec]
-
   implicit val ExecuteRequestJSON = Json.format[execute_request]
   implicit val ExecuteReplyJSON: Writes[execute_reply] = Json.writes[execute_reply]
 
-  implicit val ObjectInfoRequestJSON = Json.format[object_info_request]
-  implicit val ObjectInfoReplyJSON: Writes[object_info_reply] = Json.writes[object_info_reply]
+  implicit val ObjectInfoRequestJSON = Json.format[inspect_request]
+  implicit val ObjectInfoReplyJSON: Writes[inspect_reply] = Json.writes[inspect_reply]
 
   implicit val CompleteRequestJSON = Json.format[complete_request]
   implicit val CompleteReplyJSON = Json.format[complete_reply]
@@ -546,6 +509,7 @@ package object formats {
   implicit val ConnectReplyJSON = Json.format[connect_reply]
 
   implicit val KernelInfoRequestJSON = Json.noFields[kernel_info_request]
+  implicit val LanguageInfoJSON = Json.format[LanguageInfo]
   implicit val KernelInfoReplyJSON = Json.format[kernel_info_reply]
 
   implicit val ShutdownRequestJSON = Json.format[shutdown_request]
@@ -553,9 +517,9 @@ package object formats {
 
   implicit val StreamJSON = Json.writes[stream]
   implicit val DisplayDataJSON = Json.writes[display_data]
-  implicit val PyinJSON = Json.writes[pyin]
-  implicit val PyoutJSON = Json.writes[pyout]
-  implicit val PyerrJSON = Json.writes[pyerr]
+  implicit val PyinJSON = Json.writes[execute_input]
+  implicit val PyoutJSON = Json.writes[execute_result]
+  implicit val PyerrJSON = Json.writes[error]
   implicit val StatusJSON = Json.writes[status]
   implicit val ClearOutputJSON = new Writes[clear_output] {
     def writes(obj: clear_output) = {

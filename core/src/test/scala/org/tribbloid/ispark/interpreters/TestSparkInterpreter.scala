@@ -307,6 +307,21 @@ class TestSparkInterpreter extends FunSuite {
     assertDoesNotContain("Exception", output)
     assertContains("Data(List((text/plain,Array((1,CompactBuffer(Foo(1), Foo(2)))))))", output)
   }
+
+  test("HashingTF can be serialized") {
+    val output = runInterpreter("local-cluster[1,1,512]",
+      """
+        |import org.apache.spark.mllib.feature.HashingTF
+        |val text ="Apache Spark is an open-source cluster computing framework originally developed in the AMPLab at UC Berkeley. In contrast to Hadoop's two-stage disk-based MapReduce paradigm, Spark's in-memory primitives provide performance up to 100 times faster for certain applications.[1] By allowing user programs to load data into a cluster's memory and query it repeatedly, Spark is well suited to machine learning algorithms.[2]"
+        |val spamText = sc.parallelize(text.split("[\\.,]"))
+        |val tf = new HashingTF(numFeatures = 10000)
+        |val spamFeatures = spamText.map(email => tf.transform(email.split(" ")))
+        |spamFeatures.count()
+      """.stripMargin)
+    assertDoesNotContain("Error", output)
+    assertDoesNotContain("Exception", output)
+    assert("Value(6,Long,Data(List((text/plain,6))))" == output)
+  }
 }
 
 class WithKryoSerializer extends TestSparkInterpreter {

@@ -15,17 +15,17 @@ class SpookyInterpreter(
                          )
   extends SparkInterpreter(output, master, usejavacp, appName) {
 
-//  @DeveloperApi
-//  def createSpookyContext(): SpookyContext = {
-//    val name = "org.tribbloid.spookystuff.SpookyContext"
-//    val loader = Option(Thread.currentThread().getContextClassLoader).getOrElse(this.getClass.getClassLoader)
-//    val spooky = loader.loadClass(name).getConstructor(classOf[SQLContext])
-//      .newInstance(sqlContext).asInstanceOf[SpookyContext]
-//
-//    logInfo("Created SpookyContext..")
-//
-//    spooky
-//  }
+  //  @DeveloperApi
+  //  def createSpookyContext(): SpookyContext = {
+  //    val name = "org.tribbloid.spookystuff.SpookyContext"
+  //    val loader = Option(Thread.currentThread().getContextClassLoader).getOrElse(this.getClass.getClassLoader)
+  //    val spooky = loader.loadClass(name).getConstructor(classOf[SQLContext])
+  //      .newInstance(sqlContext).asInstanceOf[SpookyContext]
+  //
+  //    logInfo("Created SpookyContext..")
+  //
+  //    spooky
+  //  }
 
   override def importSpark() {
 

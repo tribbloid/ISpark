@@ -1,6 +1,6 @@
 package org.tribbloid.ispark
 
-import org.tribbloid.ispark.Util.{debug, getpid, log}
+import org.tribbloid.ispark.Util.{getpid, log}
 import org.tribbloid.ispark.display.{Data, IScala}
 import org.tribbloid.ispark.interpreters.{Results, SparkInterpreter}
 import org.tribbloid.ispark.json.JsonUtil._
@@ -66,14 +66,13 @@ class Main(options: Options) extends Parent {
   val ipy = new Communication(zmq, profile)
 
   def welcome() {
-    import scala.util.Properties._
-    log(s"Welcome to Scala $versionNumberString ($javaVmName, Java $javaVersion)")
+    log(Util.kernel_info)
   }
 
   Runtime.getRuntime.addShutdownHook(
     new Thread() {
       override def run() {
-        debug("Terminating Main")
+        Util.log("Terminating Main")
         interpreter.closeAll()
 
         session.endSession(n)
@@ -126,7 +125,7 @@ class Main(options: Options) extends Parent {
   val ExecuteHandler    = new ExecuteHandler(this)
   val CompleteHandler   = new CompleteHandler(this)
   val KernelInfoHandler = new KernelInfoHandler(this)
-  val ObjectInfoHandler = new ObjectInfoHandler(this)
+  val InspectHandler = new InspectHandler(this)
   val ConnectHandler    = new ConnectHandler(this)
   val ShutdownHandler   = new ShutdownHandler(this)
   val HistoryHandler    = new HistoryHandler(this)
@@ -140,6 +139,7 @@ class Main(options: Options) extends Parent {
     }
   }
 
+  //TODO: not all requests are handled
   class EventLoop(socket: ZMQ.Socket) extends Thread {
     def dispatch[T <: FromIPython](msg: Msg[T]) {
       IScala.withConn(new Conn(msg)) {
@@ -147,14 +147,14 @@ class Main(options: Options) extends Parent {
           case MsgTypes.execute_request     => ExecuteHandler(socket, msg.asInstanceOf[Msg[execute_request]])
           case MsgTypes.complete_request    => CompleteHandler(socket, msg.asInstanceOf[Msg[complete_request]])
           case MsgTypes.kernel_info_request => KernelInfoHandler(socket, msg.asInstanceOf[Msg[kernel_info_request]])
-          case MsgTypes.object_info_request => ObjectInfoHandler(socket, msg.asInstanceOf[Msg[object_info_request]])
+          case MsgTypes.inspect_request     => InspectHandler(socket, msg.asInstanceOf[Msg[inspect_request]])
           case MsgTypes.connect_request     => ConnectHandler(socket, msg.asInstanceOf[Msg[connect_request]])
           case MsgTypes.shutdown_request    => ShutdownHandler(socket, msg.asInstanceOf[Msg[shutdown_request]])
           case MsgTypes.history_request     => HistoryHandler(socket, msg.asInstanceOf[Msg[history_request]])
           case MsgTypes.comm_open           => CommOpenHandler(socket, msg.asInstanceOf[Msg[comm_open]])
           case MsgTypes.comm_msg            => CommMsgHandler(socket, msg.asInstanceOf[Msg[comm_msg]])
           case MsgTypes.comm_close          => CommCloseHandler(socket, msg.asInstanceOf[Msg[comm_close]])
-          case _                           =>
+          case _                            =>
         }
       }
     }
@@ -176,7 +176,7 @@ class Main(options: Options) extends Parent {
   heartBeat.setName("HeartBeat")
   heartBeat.start()
 
-  debug("Starting kernel event loop")
+  Util.log("Starting kernel event loop")
   ipy.send_status(ExecutionStates.starting)
 
   val requestsLoop = new EventLoop(zmq.requests)

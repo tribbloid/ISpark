@@ -2,6 +2,8 @@ package org.tribbloid.ispark
 
 import java.lang.management.ManagementFactory
 
+import scala.util.Properties._
+
 trait ScalaUtil {
   def scalaVersion = scala.util.Properties.versionNumberString
 }
@@ -15,8 +17,11 @@ trait OSUtil {
     val name = ManagementFactory.getRuntimeMXBean.getName
     name.takeWhile(_ != '@').toInt
   }
+
+  val kernel_info = s"Spark v${org.apache.spark.SPARK_VERSION} - Scala_$versionNumberString ($javaVmName, Java $javaVersion)"
 }
 
+//TODO: change to slf4j
 trait ConsoleUtil {
   val origOut = System.out
   val origErr = System.err
