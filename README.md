@@ -144,3 +144,7 @@ Users are encouraged to attach their jars using the "--jars" parameter of spark-
 Copyright &copy; 2014 by Mateusz Paprocki, Peng Cheng and contributors.
 
 Published under ASF License, see LICENSE.
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/tribbloid/ispark/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
