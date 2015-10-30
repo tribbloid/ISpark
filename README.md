@@ -1,6 +1,8 @@
 ISpark
 ======
 
+[![Join the chat at https://gitter.im/tribbloid/ISpark](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/tribbloid/ISpark?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 **ISpark** is an [Apache Spark-shell](http://spark.apache.org/) backend for [IPython](http://ipython.org).
 
 **ISpark** is ported from [IScala](https://github.com/mattpap/IScala), all credit goes to [Mateusz Paprocki](https://github.com/mattpap)
