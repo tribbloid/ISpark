@@ -19,6 +19,13 @@ ISpark
 ISpark is a standard Spark Application that when submitted, its driver will maintain a three-way connection
 between IPython UI server and Spark cluster.
 
+## Powered By
+
+|                                                              |                                                              |
+| :----------------------------------------------------------: | :----------------------------------------------------------: |
+| Apache Spark<br />![Apache Spark](http://spark.apache.org/images/spark-logo.png) | Apache Maven<br />![Apache Maven](https://maven.apache.org/images/maven-logo-black-on-white.png) |
+| [Yourkit Java Profiler](https://www.yourkit.com/java/profiler) <br />![Yourkit](https://www.yourkit.com/images/yklogo.png) | Jupyter Notebook<br />![Jupyter](https://jupyterhub.readthedocs.io/en/stable/_static/logo.png) |
+
 ## Demo
 
 [Click me](http://ec2-54-183-195-216.us-west-1.compute.amazonaws.com:8888/notebooks/all_inclusive_do_not_create_new_notebook.ipynb) for a quick impression.
